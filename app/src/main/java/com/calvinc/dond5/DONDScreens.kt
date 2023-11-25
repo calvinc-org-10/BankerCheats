@@ -3,6 +3,7 @@ package com.calvinc.dond5
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,7 +40,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.calvinc.dond5.ui.theme.BankerCheatsTheme
 import kotlinx.coroutines.delay
 
-object DONDComposables {
+// TODO: const val for hostWords fontSize
+object DONDScreens {
 
     @Composable
     fun DONDSplashScreen() {
@@ -95,7 +97,10 @@ object DONDComposables {
     ) {
         val endGameReveal = (congrats != "")
         val cpr = 5 // columns per row
-        val boxWid = (LocalConfiguration.current.screenWidthDp / cpr) - 2
+        val scrWid = LocalConfiguration.current.screenWidthDp
+        val scrHgt = LocalConfiguration.current.screenHeightDp
+        val isLandscape = (scrWid > scrHgt)
+        val boxWid = (arrayOf(scrWid,scrHgt).min() / cpr) - (if (isLandscape) 50 else 2)
 
         // Surface (modifier = Modifier.zIndex(1f)) {
         Column(
@@ -116,13 +121,19 @@ object DONDComposables {
                         Button(
                             onClick = { onBoxOpen(row + col) },
                             modifier = Modifier.size(boxWid.dp),
+                            contentPadding = PaddingValues(
+                                start = 4.dp,
+                                top = 4.dp,
+                                end = 4.dp,
+                                bottom = 4.dp
+                            ),
                             enabled = DONDCasescaseVisible[row + col]!!,
                         )
                         {
-                            Column {
+                            Column () {
                                 Text(
                                     (row + col).toString(),
-                                    fontSize = 18.sp
+                                    fontSize = (boxWid/4).sp
                                 )
                                 if (endGameReveal && DONDCasescaseVisible[row + col]!!) {
                                     Text(
@@ -130,7 +141,7 @@ object DONDComposables {
                                             "%1$,d",
                                             DONDGlobals.Amount[DONDCasescaseContents[row+col]!!]
                                         ),
-                                        fontSize = 10.sp
+                                        fontSize = 14.sp
                                     )
                                 }
                             }
@@ -158,9 +169,13 @@ object DONDComposables {
                     }
                 }
                 if (congrats != "") {
-                    Column(horizontalAlignment = Alignment.End) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.End
+                    ) {
                         Text(
                             text = congrats,
+                            textAlign = TextAlign.End
                         )
                     }
                 }
@@ -178,7 +193,7 @@ object DONDComposables {
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             if (endGameReveal) {
                 Button(
                     onClick = { miscfunctions("again") },
@@ -211,7 +226,8 @@ object DONDComposables {
             Text(
                 text = hostWords,
                 modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                fontSize = 18.sp,
             )
             Text(
                 text = stringResource(id = R.string.titleAmountsLeftInPlay),
@@ -236,6 +252,7 @@ object DONDComposables {
                     ) {
                         Text(
                             text = DONDGlobals.Amount[p1].toString(),
+                            fontSize = 20.sp,
                             color = if (amountAvail[p1]!!) Color.Green else Color.Gray
                         )
                     }
@@ -249,6 +266,7 @@ object DONDComposables {
                     ) {
                         Text(
                             text = DONDGlobals.Amount[p2].toString(),
+                            fontSize = 20.sp,
                             color = if (amountAvail[p2]!!) Color.Green else Color.Gray
                         )
                     }
@@ -269,6 +287,7 @@ object DONDComposables {
                     ) {
                         Text(
                             text = DONDGlobals.Amount[p].toString(),
+                            fontSize = 20.sp,
                             color = if (amountAvail[p]!!) Color.Green else Color.Gray
                         )
                     }
@@ -292,6 +311,7 @@ object DONDComposables {
         ) {
             Text(
                 text = theOffer,
+                fontSize = 30.sp,
                 textAlign = TextAlign.Center,
             )
             Spacer(modifier = Modifier.height(20.dp))
@@ -350,7 +370,7 @@ object DONDComposables {
 @Composable
 fun DONDSplashScreenPreview() {
     BankerCheatsTheme {
-        DONDComposables.DONDSplashScreen()
+        DONDScreens.DONDSplashScreen()
     }
 }
 
@@ -360,7 +380,7 @@ fun MainScreenPreview() {
     val dummyMap = mutableMapOf<Int,Boolean>()
     for (i in 1..DONDGlobals.nCases) { dummyMap[i] = true }
     BankerCheatsTheme {
-        DONDComposables.MainScreen(
+        DONDScreens.MainScreen(
             DONDCasescaseVisible = dummyMap,
             hostWords = "Host Words Go Here",
             onBoxOpen = { },
@@ -380,7 +400,7 @@ fun MoneyListScreenPreview() {
         dummyAvailMap[i] = true
     }
     BankerCheatsTheme {
-        DONDComposables.MoneyListScreen(
+        DONDScreens.MoneyListScreen(
             hostWords = "Cases contain Money!!",
             amountAvail = dummyAvailMap,
             onOKClick = { },
@@ -391,7 +411,7 @@ fun MoneyListScreenPreview() {
 @Composable
 fun OfferScreenPreview() {
     BankerCheatsTheme {
-        DONDComposables.OfferScreen(
+        DONDScreens.OfferScreen(
             theOffer = "The Offer Sucks",
             playerAnswer = {}
         )
@@ -402,7 +422,7 @@ fun OfferScreenPreview() {
 @Composable
 fun TimeForOfferPreview() {
     BankerCheatsTheme {
-        DONDComposables.TimeForOffer(
+        DONDScreens.TimeForOffer(
             "Do You Want Money?",
             {}
         )

@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
                         .background(MaterialTheme.colorScheme.background),
                     totalTimeInMillis = SPLASH_DELAY,
                     beforeFinished = {
-                        DONDComposables.DONDSplashScreen()
+                        DONDScreens.DONDSplashScreen()
                     },
                     whenFinished = {
                         PlayDOND()
@@ -214,7 +214,7 @@ fun PlayDOND() {
 
         }
         enumDONDGameState.DONDPickMyBox -> {
-            DONDComposables.MainScreen(
+            DONDScreens.MainScreen(
                 DONDCasescaseVisible = DONDCasescaseVisible.toMap(),
                 hostWords = hostWords,
                 onBoxOpen = { n ->
@@ -234,7 +234,7 @@ fun PlayDOND() {
             )
         }
         enumDONDGameState.DONDStartNewRound -> {
-            DONDComposables.MainScreen(
+            DONDScreens.MainScreen(
                 DONDCasescaseVisible = DONDCasescaseVisible.toMap(),
                 hostWords = hostWords,
                 miscfunctions = {
@@ -260,14 +260,14 @@ fun PlayDOND() {
 
         }
         enumDONDGameState.DONDPrepareForOffer -> {
-            DONDComposables.TimeForOffer(
+            DONDScreens.TimeForOffer(
                 hostWords = hostWords
             ) {
                 DONDGameState = enumDONDGameState.DONDMakeOffer
             }
         }
         enumDONDGameState.DONDMakeOffer -> {
-            DONDComposables.OfferScreen(
+            DONDScreens.OfferScreen(
                 theOffer = hostWords,
                 playerAnswer = {
                     offerAccepted = it
@@ -281,7 +281,7 @@ fun PlayDOND() {
             )
         }
         enumDONDGameState.DONDChooseNextBox -> {
-            DONDComposables.MainScreen(
+            DONDScreens.MainScreen(
                 DONDCasescaseVisible = DONDCasescaseVisible.toMap(),
                 hostWords = hostWords,
                 miscfunctions = {
@@ -300,7 +300,7 @@ fun PlayDOND() {
             )
         }
         enumDONDGameState.DONDShowAmountsLeft -> {
-            DONDComposables.MoneyListScreen(
+            DONDScreens.MoneyListScreen(
                 hostWords = hostWords,
                 amountAvail = amountAvail.toMap(),
                 onOKClick = {
@@ -309,7 +309,7 @@ fun PlayDOND() {
             )
         }
         enumDONDGameState.DONDCongratulate -> {
-            DONDComposables.MainScreen(
+            DONDScreens.MainScreen(
                 DONDCasescaseVisible = DONDCasescaseVisible.toMap(),
                 hostWords = hostWords,
                 congrats = wordsCongrat,
