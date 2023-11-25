@@ -2,6 +2,7 @@ package com.calvinc.dond5
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,10 +29,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
@@ -93,7 +96,9 @@ object DONDComposables {
         hostWords:String, congrats:String = "",
         onBoxOpen: (n:Int) -> Unit,
         terminatorfunction: () -> Unit,
+        DONDCasescaseContents:Map<Int,Int> = mapOf()
     ) {
+        val endGameReveal = (congrats != "")
         val cpr = 5 // columns per row
         val boxWid = (LocalConfiguration.current.screenWidthDp / cpr) - 2
 
@@ -105,10 +110,6 @@ object DONDComposables {
         )
         {
             Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "This is the main game screen",
-                fontSize = 30.sp,
-            )
             Text(
                 text = hostWords,
                 fontSize = 24.sp
@@ -123,7 +124,18 @@ object DONDComposables {
                             enabled = DONDCasescaseVisible[row + col]!!,
                         )
                         {
-                            Text((row + col).toString())
+                            Column {
+                                Text((row + col).toString())
+                                if (endGameReveal && DONDCasescaseVisible[row + col]!!) {
+                                    Text(
+                                        String.format(
+                                            "%1$,d",
+                                            DONDGlobals.Amount[DONDCasescaseContents[row+col]!!]
+                                        ),
+                                        fontSize = 8.sp
+                                    )
+                                }
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(6.dp))

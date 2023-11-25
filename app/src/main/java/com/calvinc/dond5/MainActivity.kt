@@ -66,15 +66,6 @@ class MainActivity : ComponentActivity() {
                         PlayDOND()
                     }
                 )
-                /*
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Greeting("Android")
-                }
-                */
             }
         }
     }
@@ -85,6 +76,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
+// TODO: Move vars from DONDGlobals here
 fun PlayDOND() {
     // this var is simply a shortcut, but it's used is several places
     val nBoxes = DONDGlobals.nCases
@@ -95,13 +87,13 @@ fun PlayDOND() {
     var DONDCasescaseContents= rememberSaveable { mutableStateMapOf<Int,Int>()  }
     var amountAvail = rememberSaveable { mutableStateMapOf<Int,Boolean>() }
     */
-    // var waitingForUserInput:Boolean by remember { mutableStateOf(false) }
     var DONDGameState:enumDONDGameState by remember { mutableStateOf(enumDONDGameState.DONDInit) }
     var DONDCasescaseVisible= remember { mutableStateMapOf<Int,Boolean>()  }
     var DONDCasescaseContents= remember { mutableStateMapOf<Int,Int>()  }
     var amountAvail = remember { mutableStateMapOf<Int,Boolean>() }
 
     var hostWords: String = ""
+    var wordsCongrat = ""
     var offerAccepted: Boolean
 
     // set up variables
@@ -148,6 +140,14 @@ fun PlayDOND() {
                         R.string.hostWord_OfferRefused,
                         DONDGlobals.offerMoney
                     ) + System.lineSeparator()
+
+                    // adjust bank offer constraints
+                    DONDGlobals.offerMinPct += DONDGlobals.offerMinPctDelta
+                    DONDGlobals.offerMaxPct += DONDGlobals.offerMaxPctDelta
+
+                    if (DONDGlobals.toOpen > 1) {
+                        DONDGlobals.toOpen--
+                    }
                 }
                 //TODO: Look at Plural resources or MessageFormat class
                 hostWords += stringResource(
@@ -155,11 +155,10 @@ fun PlayDOND() {
                     DONDGlobals.toOpen
                 )
             } else {
-                // Congratulate(true)
+                DONDGameState = enumDONDGameState.DONDCongratulate
             }
         }
 
-        enumDONDGameState.DONDShowBoxes -> {}
         enumDONDGameState.DONDChooseNextBox -> {
             val nCase = DONDGlobals.lastCaseOpened
             hostWords = String.format(
@@ -198,17 +197,39 @@ fun PlayDOND() {
             hostWords += System.lineSeparator() + "Do you accept this offer?"
         }
 
-/*RESTARTHERE
-
         enumDONDGameState.DONDCongratulate -> {
-        /*
-        boxesFragment!!.MakeHostSay(String.format(AppResources.getString(R.string.hostWord_OfferTaken), DONDGlobals.offerMoney))
-        Congratulate()
-        */
+            val heldOnToEnd = (DONDGlobals.roundNum > DONDGlobals.FinalRound)
+            val CaseMoney = DONDGlobals.Amount[DONDCasescaseContents[DONDGlobals.intMyCase]!!]
+            val WonMoney = if (heldOnToEnd) CaseMoney else DONDGlobals.offerMoney
+            hostWords = stringResource(R.string.hostWord_Congrats1, WonMoney)
+
+            wordsCongrat = (
+                    if (heldOnToEnd)
+                        String.format("Your last offer was %1$,d.", DONDGlobals.offerMoney)
+                    else
+                        String.format("Your Box %1\$d contains %2$,d.", DONDGlobals.intMyCase, CaseMoney)
+                    ) + System.lineSeparator() + String.format("Congratulations on winning %1$,d.", WonMoney) + System.lineSeparator()
+            var QualityOfDeal = WonMoney.toDouble() / (if (heldOnToEnd) DONDGlobals.offerMoney else CaseMoney)
+            if (QualityOfDeal > 200) {
+                // incredible
+                wordsCongrat += stringResource(R.string.QualityOfDeal_incredible)
+            } else if (QualityOfDeal > 30) {
+                // awesome
+                wordsCongrat += stringResource(R.string.QualityOfDeal_awesome)
+            } else if (QualityOfDeal > 5) {
+                // great
+                wordsCongrat += stringResource(R.string.QualityOfDeal_great)
+            } else if (QualityOfDeal > 1) {
+                // good
+                wordsCongrat += stringResource(R.string.QualityOfDeal_good)
+            } else if (QualityOfDeal < 1) {
+                // too bad
+                wordsCongrat += stringResource(R.string.QualityOfDeal_notgood)
+            }
         }
         enumDONDGameState.DONDGetUserEndgameDecision -> {}
         enumDONDGameState.DONDEndGame -> {}
-*/
+
         else -> {}
     }
 
@@ -254,7 +275,6 @@ fun PlayDOND() {
             )
 
         }
-        enumDONDGameState.DONDShowBoxes -> {}
         enumDONDGameState.DONDPrepareForOffer -> {
             DONDComposables.TimeForOffer(
                 hostWords = hostWords
@@ -271,11 +291,6 @@ fun PlayDOND() {
                         // congratulate and leave
                         DONDGameState = enumDONDGameState.DONDCongratulate
                     } else {
-                        DONDGlobals.offerMinPct += DONDGlobals.offerMinPctDelta
-                        DONDGlobals.offerMaxPct += DONDGlobals.offerMaxPctDelta
-                        if (DONDGlobals.toOpen > 1) {
-                            DONDGlobals.toOpen--
-                        }
                         DONDGameState = enumDONDGameState.DONDStartNewRound
                     }
                 }
@@ -304,7 +319,17 @@ fun PlayDOND() {
                 }
             )
         }
-        enumDONDGameState.DONDCongratulate -> {}
+        enumDONDGameState.DONDCongratulate -> {
+            DONDComposables.MainScreen(
+                DONDCasescaseVisible = DONDCasescaseVisible.toMap(),
+                hostWords = hostWords,
+                congrats = wordsCongrat,
+                terminatorfunction = MainActivity.fnfinish,
+                onBoxOpen = { },
+                DONDCasescaseContents = DONDCasescaseContents.toMap()
+            )
+
+        }
         enumDONDGameState.DONDGetUserEndgameDecision -> {}
         enumDONDGameState.DONDEndGame -> {}
 
@@ -376,276 +401,3 @@ private fun CalculateOffer(
     return DONDGlobals.offerMoney
 }
 
-/*******************************************************
- *  THE ACTUAL SCREENS
- *******************************************************/
-
-/*
-@Composable
-fun DONDSplashScreen() {
-    var showSplash by remember { mutableStateOf(true) }
-    val SPLASH_DELAY: Long = 5000
-
-    LaunchedEffect(key1 = Unit) {
-        delay(SPLASH_DELAY)
-        showSplash = false
-        DONDGlobals.SplashDone = true
-    }
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.Center,
-    )
-    {
-        if (showSplash) {
-            Text(
-                text = DONDGlobals.TID,
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Image(
-                painter = painterResource(id = R.drawable.banker1),
-                contentDescription = "The Banker",
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = stringResource(id = R.string.DONDGameTitle),
-                fontFamily = FontFamily(Font(R.font.lemonregular)),
-                fontSize = 48.sp,
-                lineHeight = 40.sp,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                text = stringResource(id = R.string.DONDGameSubTitle),
-                fontFamily = FontFamily(Font(R.font.edutasbeginnervariablefontweight)),
-                fontSize = 30.sp,
-                textAlign = TextAlign.Center,
-            )
-            Button(
-                onClick = { DONDGlobals.CalvinCheat = true }
-            ) { Text(stringResource(id = R.string.DONDGameAuthor)) }
-        }
-    }
-}
-
-@Composable
-fun MainScreen(
-    DONDCasescaseVisible:Map<Int,Boolean>,
-    hostWords:String, congrats:String = "",
-    onBoxOpen: (Int) -> Unit,
-    terminatorfunction: () -> Unit,
-) {
-    val cpr = 5 // columns per row
-    val boxWid = (LocalConfiguration.current.screenWidthDp / cpr) - 2
-
-    // Surface (modifier = Modifier.zIndex(1f)) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    )
-    {
-        Spacer(modifier = Modifier.height(10.dp))
-        Text(
-            text = "This is the main game screen",
-            fontSize = 30.sp,
-        )
-        Text(
-            text = hostWords,
-            fontSize = 24.sp
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        for (row in 1 until DONDGlobals.nCases step cpr) {
-            Row {
-                for (col in 0..4) {
-                    Button(
-                        onClick = {
-                            onBoxOpen(row + col)
-                        },
-                        modifier = Modifier.size(boxWid.dp),
-                        enabled = DONDCasescaseVisible[row + col]!!,
-                    )
-                    {
-                        Text((row + col).toString())
-                    }
-                }
-                Spacer(modifier = Modifier.height(6.dp))
-            }
-        }
-        Spacer(modifier = Modifier.height((12.dp)))
-        Row(
-            horizontalArrangement = Arrangement.Start,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            if (DONDGlobals.intMyCase != 0) {
-                Column(horizontalAlignment = Alignment.Start) {
-                    Text(
-                        text = "Your Case is",
-                    )
-                    Text(
-                        modifier = Modifier.size(25.dp),
-                        text = DONDGlobals.intMyCase.toString(),
-                        fontSize = 20.sp
-                    )
-                }
-            }
-            if (congrats != "") {
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = congrats,
-                    )
-                }
-            }
-        }
-        Spacer(modifier = Modifier.height(6.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
-        ) {
-            Text(
-                text = "ShowAmounts button here, r just",
-                textAlign = TextAlign.End,
-            )
-        }
-        Spacer(modifier = Modifier.height(60.dp))
-        Button(
-            onClick = { terminatorfunction() },
-            modifier = Modifier.align(Alignment.End),
-        ) {
-            Text(text = "Go Away!")
-        }
-    }
-}
-
-@Composable
-fun MoneyListScreen(
-    amountAvail:Map<Int,Boolean>,
-    CaseNum:Int,
-    onOKClick: () -> Unit,
-) { // show available amounts and grey out CaseContents[CaseChosen]
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            text = stringResource(id = R.string.titleAmountsLeftInPlay),
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        for (row in 1..DONDGlobals.nCases / 2) {
-            val p1 = row
-            val p2 = row + DONDGlobals.nCases / 2
-            // first box on this row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Button(
-                    modifier = Modifier.weight(1f),
-                    onClick = {},
-                    elevation = ButtonDefaults.buttonElevation(),
-                    // enabled = false,
-                    // colors = ButtonColors()
-                ) {
-                    Text(
-                        text = DONDGlobals.Amount[p1].toString(),
-                        color = if (amountAvail[p1]!!) Color.Green else Color.Gray
-                    )
-                }
-                // second box on this row
-                Button(
-                    modifier = Modifier.weight(1f),
-                    onClick = {},
-                    elevation = ButtonDefaults.buttonElevation(),
-                    // enabled = false,
-                    // colors = ButtonColors()
-                ) {
-                    Text(
-                        text = DONDGlobals.Amount[p2].toString(),
-                        color = if (amountAvail[p2]!!) Color.Green else Color.Gray
-                    )
-                }
-            }
-        }
-        if (DONDGlobals.nCases % 2 == 1) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                val p = DONDGlobals.nCases
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {},
-                    elevation = ButtonDefaults.buttonElevation(),
-                    // enabled = false,
-                    // colors = ButtonColors()
-                ) {
-                    Text(
-                        text = DONDGlobals.Amount[p].toString(),
-                        color = if (amountAvail[p]!!) Color.Green else Color.Gray
-                    )
-                }
-            }
-        }
-        Spacer(modifier = Modifier.height((12.dp)))
-        Button(onClick = onOKClick) {
-            Text(text = stringResource(id = android.R.string.ok))
-        }
-    }
-}
-
-@Composable
-fun OfferScreen() {
-
-}
-
-/* 
-@Preview(showBackground = true)
-@Composable
-fun DONDSplashScreenPreview() {
-    BankerCheatsTheme {
-        DONDSplashScreen()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MainScreenPreview() {
-    val dummyMap = mutableMapOf<Int,Boolean>()
-    for (i in 1..DONDGlobals.nCases) { dummyMap[i] = true }
-    BankerCheatsTheme {
-        MainScreen(
-            DONDCasescaseVisible = dummyMap,
-            hostWords = "Host Words Go Here",
-            onBoxOpen = { },
-            terminatorfunction = { }
-        )
-    }
-}
-@Preview(showBackground = true)
-@Composable
-fun MoneyListScreenPreview() {
-    val dummyVisibleMap = mutableMapOf<Int,Boolean>()
-    val dummyContentsMap = mutableMapOf<Int,Int>()
-    val dummyAvailMap = mutableMapOf<Int,Boolean>()
-    for (i in 1..DONDGlobals.nCases) {
-        dummyVisibleMap[i] = true
-        dummyContentsMap[i] = i
-        dummyAvailMap[i] = true
-    }
-    BankerCheatsTheme {
-        MoneyListScreen(
-            amountAvail = dummyAvailMap,
-            CaseNum = 0,
-            onOKClick = { },
-        )
-    }
-}
-@Preview(showBackground = true)
-@Composable
-fun OfferScreenPreview() {
-    BankerCheatsTheme {
-        OfferScreen()
-    }
-}
-*/

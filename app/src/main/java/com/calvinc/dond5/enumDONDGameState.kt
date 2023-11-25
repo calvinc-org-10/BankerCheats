@@ -5,7 +5,6 @@ enum class enumDONDGameState {
     DONDActivateGame,
     DONDPickMyBox,
     DONDStartNewRound,
-    DONDShowBoxes,
     DONDChooseNextBox,
     DONDPrepareForOffer,
     DONDMakeOffer,
