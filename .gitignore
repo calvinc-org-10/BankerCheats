@@ -1,5 +1,8 @@
 # nothing from hidden directories
-.*/
+.*/*
+.gradle/
+# except .idea
+!.idea/
 
 # Compiled class file
 *.class

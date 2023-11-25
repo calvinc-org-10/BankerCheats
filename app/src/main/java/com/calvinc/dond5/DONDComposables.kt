@@ -2,12 +2,12 @@ package com.calvinc.dond5
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -29,12 +29,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
@@ -60,9 +58,6 @@ object DONDComposables {
         )
         {
             if (showSplash) {
-                Text(
-                    text = DONDGlobals.TID,
-                )
                 Spacer(modifier = Modifier.height(10.dp))
                 Image(
                     painter = painterResource(id = R.drawable.banker1),
@@ -95,7 +90,7 @@ object DONDComposables {
         DONDCasescaseVisible:Map<Int,Boolean>,
         hostWords:String, congrats:String = "",
         onBoxOpen: (n:Int) -> Unit,
-        terminatorfunction: () -> Unit,
+        miscfunctions: (f:String) -> Unit,
         DONDCasescaseContents:Map<Int,Int> = mapOf()
     ) {
         val endGameReveal = (congrats != "")
@@ -125,14 +120,17 @@ object DONDComposables {
                         )
                         {
                             Column {
-                                Text((row + col).toString())
+                                Text(
+                                    (row + col).toString(),
+                                    fontSize = 18.sp
+                                )
                                 if (endGameReveal && DONDCasescaseVisible[row + col]!!) {
                                     Text(
                                         String.format(
                                             "%1$,d",
                                             DONDGlobals.Amount[DONDCasescaseContents[row+col]!!]
                                         ),
-                                        fontSize = 8.sp
+                                        fontSize = 10.sp
                                     )
                                 }
                             }
@@ -150,11 +148,12 @@ object DONDComposables {
                     Column(horizontalAlignment = Alignment.Start) {
                         Text(
                             text = "Your Case is",
+                            modifier = Modifier.padding(start = 4.dp)
                         )
                         Text(
-                            modifier = Modifier.size(25.dp),
+                            modifier = Modifier.padding(start = 24.dp),
                             text = DONDGlobals.intMyCase.toString(),
-                            fontSize = 20.sp
+                            fontSize = 24.sp
                         )
                     }
                 }
@@ -167,18 +166,30 @@ object DONDComposables {
                 }
             }
             Spacer(modifier = Modifier.height(6.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Text(
-                    text = "ShowAmounts button here, r just",
-                    textAlign = TextAlign.End,
-                )
+            if (!endGameReveal) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(
+                        onClick = { miscfunctions("amounts") },
+                    ) {
+                        Text(text = "Show Amounts")
+                    }
+                }
             }
             Spacer(modifier = Modifier.height(60.dp))
+            if (endGameReveal) {
+                Button(
+                    onClick = { miscfunctions("again") },
+                    modifier = Modifier.align(Alignment.End),
+                ) {
+                    Text(text = "Play Again")
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+            }
             Button(
-                onClick = { terminatorfunction() },
+                onClick = { miscfunctions("stop") },
                 modifier = Modifier.align(Alignment.End),
             ) {
                 Text(text = "Go Away!")
@@ -353,7 +364,7 @@ fun MainScreenPreview() {
             DONDCasescaseVisible = dummyMap,
             hostWords = "Host Words Go Here",
             onBoxOpen = { },
-            terminatorfunction = { }
+            miscfunctions = { }
         )
     }
 }

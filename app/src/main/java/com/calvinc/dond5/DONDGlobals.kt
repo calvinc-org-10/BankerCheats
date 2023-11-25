@@ -1,7 +1,5 @@
 package com.calvinc.dond5
 
-import java.time.Instant
-
 //TODO:  Move DONDGlobals to MainActivity.companion?
 object DONDGlobals {
     const val nCases = 25
@@ -11,8 +9,6 @@ object DONDGlobals {
     const val offerMinPctDelta = 0.07
     const val absOfferMaxPct = 0.83
     const val offerMaxPctDelta = 0.0625
-
-    val TID = "Test ID ${Instant.now()}"
 
     /*
     changes to DONDCases drive recomposition of DONDComposables.MainScreen.
