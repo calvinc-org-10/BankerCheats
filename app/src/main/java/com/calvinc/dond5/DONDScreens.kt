@@ -1,10 +1,12 @@
 package com.calvinc.dond5
 
+import android.widget.Button
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,10 +35,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import com.calvinc.dond5.DONDGlobals.Amount
+import com.calvinc.dond5.DONDGlobals.CalvinCheat
+import com.calvinc.dond5.DONDGlobals.DONDUtter
+import com.calvinc.dond5.DONDGlobals.SplashDone
+import com.calvinc.dond5.DONDGlobals.hostWordFontSize
+import com.calvinc.dond5.DONDGlobals.intMyBox
+import com.calvinc.dond5.DONDGlobals.nBoxes
 import com.calvinc.dond5.ui.theme.BankerCheatsTheme
 import kotlinx.coroutines.delay
 
@@ -51,7 +61,7 @@ object DONDScreens {
         LaunchedEffect(key1 = Unit) {
             delay(SPLASH_DELAY)
             showSplash = false
-            DONDGlobals.SplashDone = true
+            SplashDone = true
         }
 
         Column(
@@ -81,7 +91,7 @@ object DONDScreens {
                     textAlign = TextAlign.Center,
                 )
                 Button(
-                    onClick = { DONDGlobals.CalvinCheat = true }
+                    onClick = { CalvinCheat = true }
                 ) { Text(stringResource(id = R.string.DONDGameAuthor)) }
             }
         }
@@ -89,11 +99,11 @@ object DONDScreens {
 
     @Composable
     fun MainScreen(
-        DONDCasescaseVisible:Map<Int,Boolean>,
+        DONDBoxesVisiblity:Map<Int,Boolean>,
         hostWords:String, congrats:String = "",
         onBoxOpen: (n:Int) -> Unit,
         miscfunctions: (f:String) -> Unit,
-        DONDCasescaseContents:Map<Int,Int> = mapOf()
+        DONDBoxesContents:Map<Int,Int> = mapOf()
     ) {
         val endGameReveal = (congrats != "")
         val cpr = 5 // columns per row
@@ -112,10 +122,11 @@ object DONDScreens {
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = hostWords,
-                fontSize = 24.sp
+                fontSize = hostWordFontSize.sp
             )
+            DONDUtter(hostWords)
             Spacer(modifier = Modifier.height(12.dp))
-            for (row in 1 until DONDGlobals.nCases step cpr) {
+            for (row in 1 until nBoxes step cpr) {
                 Row {
                     for (col in 0..4) {
                         Button(
@@ -127,7 +138,7 @@ object DONDScreens {
                                 end = 4.dp,
                                 bottom = 4.dp
                             ),
-                            enabled = DONDCasescaseVisible[row + col]!!,
+                            enabled = DONDBoxesVisiblity[row + col]!!,
                         )
                         {
                             Column () {
@@ -135,13 +146,13 @@ object DONDScreens {
                                     (row + col).toString(),
                                     fontSize = (boxWid/4).sp
                                 )
-                                if (endGameReveal && DONDCasescaseVisible[row + col]!!) {
+                                if (endGameReveal && DONDBoxesVisiblity[row + col]!!) {
                                     Text(
                                         String.format(
                                             "%1$,d",
-                                            DONDGlobals.Amount[DONDCasescaseContents[row+col]!!]
+                                            Amount[DONDBoxesContents[row+col]!!]
                                         ),
-                                        fontSize = 14.sp
+                                        fontSize = (boxWid/6).sp
                                     )
                                 }
                             }
@@ -155,15 +166,15 @@ object DONDScreens {
                 horizontalArrangement = Arrangement.Start,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                if (DONDGlobals.intMyCase != 0) {
+                if (intMyBox != 0) {
                     Column(horizontalAlignment = Alignment.Start) {
                         Text(
-                            text = "Your Case is",
+                            text = stringResource(id = R.string.DONDYourBoxIs),
                             modifier = Modifier.padding(start = 4.dp)
                         )
                         Text(
                             modifier = Modifier.padding(start = 24.dp),
-                            text = DONDGlobals.intMyCase.toString(),
+                            text = intMyBox.toString(),
                             fontSize = 24.sp
                         )
                     }
@@ -173,8 +184,10 @@ object DONDScreens {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.End
                     ) {
+                        DONDUtter(congrats)
                         Text(
                             text = congrats,
+                            fontSize = hostWordFontSize.sp,
                             textAlign = TextAlign.End
                         )
                     }
@@ -215,80 +228,88 @@ object DONDScreens {
     @Composable
     fun MoneyListScreen(
         hostWords:String,
+        boxOpened:Int = 0,
         amountAvail:Map<Int,Boolean>,
         onOKClick: () -> Unit,
-    ) { // show available amounts and grey out CaseContents[CaseChosen]
+    ) {
+        val AmountFontSize = 20
+        val AmountAvailColor = Color.Green
+        val AmountNotAvailColor = Color.Gray
+        // show available amounts and grey out BoxContents[BoxChosen]
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // DONDUtter(hostWords) - nope - this phrase is repeated on MainScreen
             Text(
                 text = hostWords,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                fontSize = 18.sp,
+                fontSize = hostWordFontSize.sp,
             )
             Text(
                 text = stringResource(id = R.string.titleAmountsLeftInPlay),
                 modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                fontSize = (hostWordFontSize-2).sp,
+                textDecoration = TextDecoration.Underline
             )
             Spacer(modifier = Modifier.height(12.dp))
-            for (row in 1..DONDGlobals.nCases / 2) {
+            for (row in 1..nBoxes / 2) {
                 val p1 = row
-                val p2 = row + DONDGlobals.nCases / 2
+                val p2 = row + nBoxes / 2
                 // first box on this row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
+                    //DONDAmountButton(btnNum = p1, avail = amountAvail[p1]!!)
                     Button(
                         modifier = Modifier.weight(1f),
                         onClick = {},
                         elevation = ButtonDefaults.buttonElevation(),
-                        // enabled = false,
-                        // colors = ButtonColors()
                     ) {
+                        val btnNum = p1; val avail = amountAvail[p1]!!
                         Text(
-                            text = DONDGlobals.Amount[p1].toString(),
-                            fontSize = 20.sp,
-                            color = if (amountAvail[p1]!!) Color.Green else Color.Gray
+                            text = Amount[btnNum].toString(),
+                            fontSize = AmountFontSize.sp,
+                            color = if (avail) AmountAvailColor else AmountNotAvailColor
                         )
                     }
                     // second box on this row
+                    // DONDAmountButton(btnNum = p2, avail = amountAvail[p2]!!)
                     Button(
                         modifier = Modifier.weight(1f),
                         onClick = {},
                         elevation = ButtonDefaults.buttonElevation(),
-                        // enabled = false,
-                        // colors = ButtonColors()
                     ) {
+                        val btnNum = p2; val avail = amountAvail[p2]!!
                         Text(
-                            text = DONDGlobals.Amount[p2].toString(),
-                            fontSize = 20.sp,
-                            color = if (amountAvail[p2]!!) Color.Green else Color.Gray
+                            text = Amount[btnNum].toString(),
+                            fontSize = AmountFontSize.sp,
+                            color = if (avail) AmountAvailColor else AmountNotAvailColor
                         )
                     }
                 }
             }
-            if (DONDGlobals.nCases % 2 == 1) {
+            if ((nBoxes % 2) == 1) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    val p = DONDGlobals.nCases
+                    val p = nBoxes
+                    // DONDAmountButton(btnNum = p, avail = amountAvail[p]!!)
                     Button(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.weight(1f),
                         onClick = {},
                         elevation = ButtonDefaults.buttonElevation(),
-                        // enabled = false,
-                        // colors = ButtonColors()
                     ) {
+                        val btnNum = p; val avail = amountAvail[p]!!
                         Text(
-                            text = DONDGlobals.Amount[p].toString(),
-                            fontSize = 20.sp,
-                            color = if (amountAvail[p]!!) Color.Green else Color.Gray
+                            text = Amount[btnNum].toString(),
+                            fontSize = AmountFontSize.sp,
+                            color = if (avail) AmountAvailColor else AmountNotAvailColor
                         )
                     }
                 }
@@ -297,6 +318,30 @@ object DONDScreens {
             Button(onClick = onOKClick) {
                 Text(text = stringResource(id = android.R.string.ok))
             }
+        }
+    }
+    @Composable
+    // TODO: figure out how to return a Button with the parms I want - what's here isn't it
+    //  also need to figure out how to do the equivalent of Modifier.weight
+    fun DONDAmountButton(contngRow:RowScope, btnNum:Int, avail: Boolean, flash: Boolean = false) {
+        val AmountFontSize = 20
+        val AmountAvailColor = Color.Green
+        val AmountNotAvailColor = Color.Gray
+        var retVal: Button
+        if (!flash) {
+            Button(
+                modifier = Modifier,
+                onClick = {},
+                elevation = ButtonDefaults.buttonElevation(),
+            ) {
+                Text(
+                    text = Amount[btnNum].toString(),
+                    fontSize = AmountFontSize.sp,
+                    color = if (avail) AmountAvailColor else AmountNotAvailColor
+                )
+            }
+        } else {
+            // TODO: animate the amount
         }
     }
 
@@ -309,9 +354,11 @@ object DONDScreens {
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.Center,
         ) {
+            Spacer(modifier = Modifier.height(60.dp))
+            DONDUtter(theOffer)
             Text(
                 text = theOffer,
-                fontSize = 30.sp,
+                fontSize = hostWordFontSize.sp,
                 textAlign = TextAlign.Center,
             )
             Spacer(modifier = Modifier.height(20.dp))
@@ -319,21 +366,33 @@ object DONDScreens {
                 modifier = Modifier.fillMaxWidth(.8f),
                 horizontalArrangement = Arrangement.Center
             ) {
-                val buttonWid = 100.dp
+                val buttonWid = 70.dp
                 Button(
                     onClick = { playerAnswer(true) },
                     modifier = Modifier.size(buttonWid),
+                    contentPadding = PaddingValues(
+                        start = 4.dp,
+                        top = 4.dp,
+                        end = 4.dp,
+                        bottom = 4.dp
+                    ),
                 )
                 {
-                    Text(stringResource(id = R.string.DONDYes))
+                    Text(stringResource(id = R.string.DONDYes), fontSize = 14.sp)
                 }
                 Spacer(modifier = Modifier.width(20.dp))
                 Button(
                     onClick = { playerAnswer(false) },
                     modifier = Modifier.size(buttonWid),
+                    contentPadding = PaddingValues(
+                        start = 4.dp,
+                        top = 4.dp,
+                        end = 4.dp,
+                        bottom = 4.dp
+                    ),
                 )
                 {
-                    Text(stringResource(id = R.string.DONDNo))
+                    Text(stringResource(id = R.string.DONDNo), fontSize = 14.sp)
                 }
             }
         }
@@ -344,11 +403,12 @@ object DONDScreens {
         hostWords: String,
         msgAcknowleged: () -> Unit
     ) {
+        val buttonFontSize = 18
         AlertDialog(
             onDismissRequest = msgAcknowleged,
             confirmButton = {
                 Button(onClick = msgAcknowleged) {
-                    Text("Bring It!")
+                    Text("Bring It!", fontSize = buttonFontSize.sp)
                 }                
             },
             icon = { Icon(Icons.Default.AccountBalance,contentDescription = null) },
@@ -356,7 +416,8 @@ object DONDScreens {
                 Text("It's Time For An Offer!")
             },
             text = {
-                Text(text = hostWords)
+                DONDUtter(hostWords)
+                Text(text = hostWords, fontSize = hostWordFontSize.sp)
             },
             properties = DialogProperties(
                 dismissOnBackPress = true,
@@ -378,10 +439,10 @@ fun DONDSplashScreenPreview() {
 @Composable
 fun MainScreenPreview() {
     val dummyMap = mutableMapOf<Int,Boolean>()
-    for (i in 1..DONDGlobals.nCases) { dummyMap[i] = true }
+    for (i in 1..nBoxes) { dummyMap[i] = true }
     BankerCheatsTheme {
         DONDScreens.MainScreen(
-            DONDCasescaseVisible = dummyMap,
+            DONDBoxesVisiblity = dummyMap,
             hostWords = "Host Words Go Here",
             onBoxOpen = { },
             miscfunctions = { }
@@ -394,14 +455,14 @@ fun MoneyListScreenPreview() {
     val dummyVisibleMap = mutableMapOf<Int,Boolean>()
     val dummyContentsMap = mutableMapOf<Int,Int>()
     val dummyAvailMap = mutableMapOf<Int,Boolean>()
-    for (i in 1..DONDGlobals.nCases) {
+    for (i in 1..nBoxes) {
         dummyVisibleMap[i] = true
         dummyContentsMap[i] = i
         dummyAvailMap[i] = true
     }
     BankerCheatsTheme {
         DONDScreens.MoneyListScreen(
-            hostWords = "Cases contain Money!!",
+            hostWords = "Boxes contain Money!!",
             amountAvail = dummyAvailMap,
             onOKClick = { },
         )

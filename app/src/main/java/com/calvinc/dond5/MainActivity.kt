@@ -1,6 +1,7 @@
 package com.calvinc.dond5
 
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import br.com.frazo.splashscreens.CountDownSplashScreen
 import com.calvinc.dond5.ui.theme.BankerCheatsTheme
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 // TODO: Move DONDGlobals to companion class?
@@ -24,6 +26,22 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        DONDGlobals.DONDTTSInstance = TextToSpeech(this) {
+            DONDGlobals.TTSOK = (it == TextToSpeech.SUCCESS)
+            if (DONDGlobals.TTSOK) {
+                DONDGlobals.DONDTTSInstance.setLanguage(Locale.US)
+                // DONDGlobals.DONDTTSInstance.setPitch(0.95f)
+                // DONDGlobals.DONDTTSInstance.setSpeechRate(0.8f)
+                /*
+                val vSet = DONDGlobals.DONDTTSInstance.voices
+                val nVox = DONDGlobals.RandLong(0,(vSet.size-1))
+                val myVox = vSet.elementAt(nVox)
+                DONDGlobals.DONDTTSInstance.setVoice(myVox)
+                val announceVox = "I am voice $nVox of ${vSet.size}."
+                DONDGlobals.DONDUtter(announceVox)
+                */
+            }
+        }
         fnfinish = this::finish
 
         setContent {
@@ -44,26 +62,45 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onPause() {
+        if (DONDGlobals.TTSOK) {
+            DONDGlobals.DONDTTSInstance.stop()
+            DONDGlobals.DONDTTSInstance.shutdown()
+        }
+        super.onPause()
+    }
+
     companion object {
         lateinit var fnfinish: () -> Unit
     }
+
+    /* temp code for printing out the voice set
+    fun tmpprt(VSet: Set<Voice>) {
+        for (v in VSet) {
+            System.out.println(v.name+" / "+v.toString())
+
+        }
+    }
+    */
 }
+
 
 @Composable
 // TODO: Move vars from DONDGlobals here
 fun PlayDOND() {
     // this var is simply a shortcut, but it's used is several places
-    val nBoxes = DONDGlobals.nCases
+    val nBoxes = DONDGlobals.nBoxes
 
     /*
     var DONDGameState = remember { mutableStateOf(enumDONDGameState.DONDInit) }
-    var DONDCasescaseVisible= rememberSaveable { mutableStateMapOf<Int,Boolean>()  }
-    var DONDCasescaseContents= rememberSaveable { mutableStateMapOf<Int,Int>()  }
+    var DONDBoxesVisibility= rememberSaveable { mutableStateMapOf<Int,Boolean>()  }
+    var DONDBoxesContents= rememberSaveable { mutableStateMapOf<Int,Int>()  }
     var amountAvail = rememberSaveable { mutableStateMapOf<Int,Boolean>() }
     */
     var DONDGameState:enumDONDGameState by remember { mutableStateOf(enumDONDGameState.DONDInit) }
-    var DONDCasescaseVisible= remember { mutableStateMapOf<Int,Boolean>()  }
-    var DONDCasescaseContents= remember { mutableStateMapOf<Int,Int>()  }
+    var afterAmountState: enumDONDGameState by remember { mutableStateOf(enumDONDGameState.DONDChooseNextBox) }
+    var DONDBoxesVisiblity= remember { mutableStateMapOf<Int,Boolean>()  }
+    var DONDBoxesContents= remember { mutableStateMapOf<Int,Int>()  }
     var amountAvail = remember { mutableStateMapOf<Int,Boolean>() }
 
     var hostWords: String = ""
@@ -78,17 +115,17 @@ fun PlayDOND() {
             DONDGlobals.offerMinPct = DONDGlobals.absOfferMinPct
             DONDGlobals.offerMaxPct = DONDGlobals.absOfferMaxPct
             DONDGlobals.offerMoney = 0
-            DONDGlobals.intMyCase = 0
+            DONDGlobals.intMyBox = 0
 
             for (n in 1..nBoxes) {
                 amountAvail[n] = true
-                DONDCasescaseVisible[n] = true
+                DONDBoxesVisiblity[n] = true
             }
-            LoadCases(DONDCasescaseContents)
+            LoadBoxes(DONDBoxesContents)
 
             DONDGlobals.roundNum = 0
             DONDGlobals.toOpen = DONDGlobals.toOpenStart
-            DONDGlobals.casesOpened = 0
+            DONDGlobals.boxesOpened = 0
             val hostWords_Cheat =
                 if (DONDGlobals.CalvinCheat) "Cheat: " + DONDGlobals.tmpCheatBox + System.lineSeparator() else ""
             hostWords =
@@ -107,7 +144,7 @@ fun PlayDOND() {
         enumDONDGameState.DONDStartNewRound -> {
             DONDGlobals.roundNum++
             if (DONDGlobals.roundNum <= DONDGlobals.FinalRound) {
-                DONDGlobals.casesOpened = 0
+                DONDGlobals.boxesOpened = 0
                 hostWords = ""
                 if (DONDGlobals.roundNum > 1) {
                     hostWords = stringResource(
@@ -123,6 +160,8 @@ fun PlayDOND() {
                         DONDGlobals.toOpen--
                     }
                 }
+                if (DONDGlobals.roundNum == 1) { hostWords += stringResource(id = R.string.hostWord_YouveChosenBox, DONDGlobals.intMyBox) }
+
                 //TODO: Look at Plural resources or MessageFormat class
                 hostWords += stringResource(
                     if (DONDGlobals.toOpen == 1) R.string.hostWord_TimeToOpen1Box else R.string.hostWord_TimeToOpenBoxes,
@@ -134,31 +173,34 @@ fun PlayDOND() {
         }
 
         enumDONDGameState.DONDChooseNextBox -> {
-            val nCase = DONDGlobals.lastCaseOpened
+            val nBox = DONDGlobals.lastBoxOpened
             hostWords = String.format(
-                stringResource(R.string.hostWord_CaseContains),
-                nCase,
-                DONDGlobals.Amount[DONDCasescaseContents[nCase]!!]
+                stringResource(R.string.hostWord_BoxContains),
+                nBox,
+                DONDGlobals.Amount[DONDBoxesContents[nBox]!!]
             ) + System.lineSeparator()
 
-            if (DONDGlobals.casesOpened >= DONDGlobals.toOpen) {
+            if (DONDGlobals.boxesOpened >= DONDGlobals.toOpen) {
                 hostWords += stringResource(R.string.hostWord_TimeForOffer)
                 DONDGameState = enumDONDGameState.DONDPrepareForOffer
             } else {
                 hostWords += stringResource(
-                    id = if (DONDGlobals.toOpen - DONDGlobals.casesOpened == 1) R.string.hostWord_OpenOneMoreBox else R.string.hostWord_OpenAnotherBoxofN,
-                    DONDGlobals.toOpen - DONDGlobals.casesOpened
+                    id = if (DONDGlobals.toOpen - DONDGlobals.boxesOpened == 1) R.string.hostWord_OpenOneMoreBox else R.string.hostWord_OpenAnotherBoxofN,
+                    DONDGlobals.toOpen - DONDGlobals.boxesOpened
                 )
             }
         }
 
         enumDONDGameState.DONDShowAmountsLeft -> {
-            val nCase = DONDGlobals.lastCaseOpened
-            hostWords = String.format(
-                stringResource(R.string.hostWord_CaseContains),
-                nCase,
-                DONDGlobals.Amount[DONDCasescaseContents[nCase]!!]
-            )
+            val nBox = DONDGlobals.lastBoxOpened
+            hostWords = if (nBox != 0)
+                String.format(
+                    stringResource(R.string.hostWord_BoxContains),
+                    nBox,
+                    DONDGlobals.Amount[DONDBoxesContents[nBox]!!]
+                )
+            else
+                ""
         }
 
         enumDONDGameState.DONDMakeOffer -> {
@@ -167,23 +209,23 @@ fun PlayDOND() {
             hostWords += System.lineSeparator()
             val n = if (DONDGlobals.toOpen < 2) 1 else DONDGlobals.toOpen - 1
             hostWords += if (DONDGlobals.roundNum >= DONDGlobals.FinalRound) "This will be your last offer."
-                else "If you don't accept the offer, you must open $n case(s)."
+                else "If you don't accept the offer, you must open $n "+(if (n==1) "box" else "boxes")+"."
             hostWords += System.lineSeparator() + "Do you accept this offer?"
         }
 
         enumDONDGameState.DONDCongratulate -> {
             val heldOnToEnd = (DONDGlobals.roundNum > DONDGlobals.FinalRound)
-            val CaseMoney = DONDGlobals.Amount[DONDCasescaseContents[DONDGlobals.intMyCase]!!]
-            val WonMoney = if (heldOnToEnd) CaseMoney else DONDGlobals.offerMoney
+            val BoxMoney = DONDGlobals.Amount[DONDBoxesContents[DONDGlobals.intMyBox]!!]
+            val WonMoney = if (heldOnToEnd) BoxMoney else DONDGlobals.offerMoney
             hostWords = stringResource(R.string.hostWord_Congrats1, WonMoney)
 
             wordsCongrat = (
                     if (heldOnToEnd)
                         String.format("Your last offer was %1$,d.", DONDGlobals.offerMoney)
                     else
-                        String.format("Your Box %1\$d contains %2$,d.", DONDGlobals.intMyCase, CaseMoney)
+                        String.format("Your Box %1\$d contains %2$,d.", DONDGlobals.intMyBox, BoxMoney)
                     ) + System.lineSeparator() + String.format("Congratulations on winning %1$,d.", WonMoney) + System.lineSeparator()
-            var QualityOfDeal = WonMoney.toDouble() / (if (heldOnToEnd) DONDGlobals.offerMoney else CaseMoney)
+            var QualityOfDeal = WonMoney.toDouble() / (if (heldOnToEnd) DONDGlobals.offerMoney else BoxMoney)
             if (QualityOfDeal > 200) {
                 // incredible
                 wordsCongrat += stringResource(R.string.QualityOfDeal_incredible)
@@ -215,44 +257,51 @@ fun PlayDOND() {
         }
         enumDONDGameState.DONDPickMyBox -> {
             DONDScreens.MainScreen(
-                DONDCasescaseVisible = DONDCasescaseVisible.toMap(),
+                DONDBoxesVisiblity = DONDBoxesVisiblity.toMap(),
                 hostWords = hostWords,
                 onBoxOpen = { n ->
-                    DONDGlobals.lastCaseOpened = n
-                    DONDCasescaseVisible[n] = false
-                    if (DONDGlobals.intMyCase == 0) {  // beginning of game; MyCase has not yet been chosen
-                        DONDGlobals.intMyCase = n
+                    DONDGlobals.lastBoxOpened = n
+                    DONDBoxesVisiblity[n] = false
+                    if (DONDGlobals.intMyBox == 0) {  // beginning of game; MyBox has not yet been chosen
+                        DONDGlobals.intMyBox = n
                     }
                     DONDGameState = enumDONDGameState.DONDStartNewRound
                 },
                 miscfunctions = {
                     when (it) {
-                        "stop" -> MainActivity.fnfinish()
-                        "amounts" -> {}
+                        "stop" -> DONDGameState = enumDONDGameState.DONDEndGame
+                        "amounts" -> {
+                            afterAmountState = DONDGameState
+                            DONDGameState = enumDONDGameState.DONDShowAmountsLeft
+                        }
                     }
                 }
             )
         }
         enumDONDGameState.DONDStartNewRound -> {
             DONDScreens.MainScreen(
-                DONDCasescaseVisible = DONDCasescaseVisible.toMap(),
+                DONDBoxesVisiblity = DONDBoxesVisiblity.toMap(),
                 hostWords = hostWords,
                 miscfunctions = {
                     when (it) {
-                        "stop" -> MainActivity.fnfinish()
-                        "amounts" -> {}
+                        "stop" -> DONDGameState = enumDONDGameState.DONDEndGame
+                        "amounts" -> {
+                            afterAmountState = enumDONDGameState.DONDChooseNextBox
+                            DONDGameState = enumDONDGameState.DONDShowAmountsLeft
+                        }
                     }
                 },
                 onBoxOpen = { n ->
-                    DONDGlobals.lastCaseOpened = n
-                    DONDCasescaseVisible[n] = false
-                    if (DONDGlobals.intMyCase == 0) {  // beginning of game; MyCase has not yet been chosen
+                    DONDGlobals.lastBoxOpened = n
+                    DONDBoxesVisiblity[n] = false
+                    if (DONDGlobals.intMyBox == 0) {  // beginning of game; MyBox has not yet been chosen
                         /* in this state, this branch should not be true */
-                        DONDGlobals.intMyCase = n
+                        DONDGlobals.intMyBox = n
                         DONDGameState = enumDONDGameState.DONDStartNewRound
                     } else {
-                        DONDGlobals.casesOpened++
-                        amountAvail[DONDCasescaseContents[n]!!] = false
+                        DONDGlobals.boxesOpened++
+                        amountAvail[DONDBoxesContents[n]!!] = false
+                        afterAmountState = enumDONDGameState.DONDChooseNextBox
                         DONDGameState = enumDONDGameState.DONDShowAmountsLeft
                     }
                 },
@@ -282,19 +331,23 @@ fun PlayDOND() {
         }
         enumDONDGameState.DONDChooseNextBox -> {
             DONDScreens.MainScreen(
-                DONDCasescaseVisible = DONDCasescaseVisible.toMap(),
+                DONDBoxesVisiblity = DONDBoxesVisiblity.toMap(),
                 hostWords = hostWords,
                 miscfunctions = {
                     when (it) {
-                        "stop" -> MainActivity.fnfinish()
-                        "amounts" -> {}
+                        "stop" -> DONDGameState = enumDONDGameState.DONDEndGame
+                        "amounts" -> {
+                            afterAmountState = DONDGameState
+                            DONDGameState = enumDONDGameState.DONDShowAmountsLeft
+                        }
                     }
                 },
                 onBoxOpen = { n ->
-                    DONDGlobals.lastCaseOpened = n
-                    DONDCasescaseVisible[n] = false
-                    DONDGlobals.casesOpened++
-                    amountAvail[DONDCasescaseContents[n]!!] = false
+                    DONDGlobals.lastBoxOpened = n
+                    DONDBoxesVisiblity[n] = false
+                    DONDGlobals.boxesOpened++
+                    amountAvail[DONDBoxesContents[n]!!] = false
+                    afterAmountState = enumDONDGameState.DONDChooseNextBox
                     DONDGameState = enumDONDGameState.DONDShowAmountsLeft
                 },
             )
@@ -304,40 +357,40 @@ fun PlayDOND() {
                 hostWords = hostWords,
                 amountAvail = amountAvail.toMap(),
                 onOKClick = {
-                    DONDGameState = enumDONDGameState.DONDChooseNextBox
+                    DONDGameState = afterAmountState
                 }
             )
         }
         enumDONDGameState.DONDCongratulate -> {
             DONDScreens.MainScreen(
-                DONDCasescaseVisible = DONDCasescaseVisible.toMap(),
+                DONDBoxesVisiblity = DONDBoxesVisiblity.toMap(),
                 hostWords = hostWords,
                 congrats = wordsCongrat,
                 miscfunctions = {
                     when (it) {
-                        "stop" -> MainActivity.fnfinish()
+                        "stop" -> DONDGameState = enumDONDGameState.DONDEndGame
                         "again" -> {}
                     }
                 },
-                onBoxOpen = { },
-                DONDCasescaseContents = DONDCasescaseContents.toMap()
+                onBoxOpen = { },    // intentionally empty - clicking a box should do nothing
+                DONDBoxesContents = DONDBoxesContents.toMap()
             )
 
         }
         enumDONDGameState.DONDGetUserEndgameDecision -> {}
-        enumDONDGameState.DONDEndGame -> {}
+        enumDONDGameState.DONDEndGame -> {  MainActivity.fnfinish() }
 
     }
 }
 
 // @Composable
-fun LoadCases(DONDCasescaseContents:MutableMap<Int,Int>) {
+fun LoadBoxes(DONDBoxesContents:MutableMap<Int,Int>) {
     // this var is simply a shortcut, but it's used is several places
-    val nBoxes = DONDGlobals.nCases
+    val nBoxes = DONDGlobals.nBoxes
     val NUM_SHUFFLES = 1000
     val tmpCheatBox = nBoxes    // tmpCheatBox is the box that holds the 1 000 000
     for (n in 1..nBoxes) {
-        DONDCasescaseContents[n] = n
+        DONDBoxesContents[n] = n
     }
     for (n in 1..NUM_SHUFFLES) {
         var p1: Int
@@ -347,13 +400,13 @@ fun LoadCases(DONDCasescaseContents:MutableMap<Int,Int>) {
             p1 = DONDGlobals.RandLong(1, nBoxes)
             p2 = DONDGlobals.RandLong(1, nBoxes)
         } while (p1 == p2)
-        tmp = DONDCasescaseContents[p1]!!
-        DONDCasescaseContents[p1] = DONDCasescaseContents[p2]!!
-        DONDCasescaseContents[p2] = tmp
-        if (DONDCasescaseContents[p1]!! == nBoxes) {
+        tmp = DONDBoxesContents[p1]!!
+        DONDBoxesContents[p1] = DONDBoxesContents[p2]!!
+        DONDBoxesContents[p2] = tmp
+        if (DONDBoxesContents[p1]!! == nBoxes) {
             DONDGlobals.tmpCheatBox = p1
         }
-        if (DONDCasescaseContents[p2]!! == nBoxes) {
+        if (DONDBoxesContents[p2]!! == nBoxes) {
             DONDGlobals.tmpCheatBox = p2
         }
     }
@@ -367,8 +420,8 @@ private fun CalculateOffer(
     var Divider = 0.0
     var Pct: Double
     val generosityFactor = 1.15
-    val nCases = DONDGlobals.nCases
-    for (n in 1..nCases) {
+    val nBoxes = DONDGlobals.nBoxes
+    for (n in 1..nBoxes) {
         if (amountAvail[n]!!) {
             TotalMoney += DONDGlobals.Amount[n].toDouble()
             Divider += 1.0

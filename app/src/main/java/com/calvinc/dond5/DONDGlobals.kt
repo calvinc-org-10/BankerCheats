@@ -1,34 +1,29 @@
 package com.calvinc.dond5
 
+import android.speech.tts.TextToSpeech
+
 //TODO:  Move DONDGlobals to MainActivity.companion?
 object DONDGlobals {
-    const val nCases = 25
+    const val nBoxes = 25
     const val toOpenStart = 6
     const val FinalRound = 8
     const val absOfferMinPct = 0.65
     const val offerMinPctDelta = 0.07
     const val absOfferMaxPct = 0.83
     const val offerMaxPctDelta = 0.0625
+    const val hostWordFontSize = 20
 
-    /*
-    changes to DONDCases drive recomposition of DONDComposables.MainScreen.
-    Therefore, this variable is part of the StartActivity companion object and is passed to MainScreen
-    Similarly with amountAvail and MoneyListScreen
-
-    var DONDCases = arrayOfNulls<DONDCase>(nCases + 1)
-    var amountAvail = BooleanArray(nCases + 1)
-    */
-
-    // var DONDGameState: enumDONDGameState = enumDONDGameState.DONDState0  // this is OK as local in PlayDOND
+    lateinit var DONDTTSInstance: TextToSpeech
+    var TTSOK = false
 
     @JvmField
-    var intMyCase = 0
+    var intMyBox = 0
     @JvmField
     var roundNum = 0
     @JvmField
     var toOpen = 0
-    var lastCaseOpened = 0
-    var casesOpened = 0
+    var lastBoxOpened = 0
+    var boxesOpened = 0
     @JvmField
     var offerMinPct = 0.0
     @JvmField
@@ -49,5 +44,11 @@ object DONDGlobals {
     fun RandLong(valMin: Int, valMax: Int): Int {
         val rndRange = valMax + 1 - valMin
         return valMin + (Math.random() * rndRange).toInt()
+    }
+
+    fun DONDUtter(speakWords: String ="", queueMode: Int = TextToSpeech.QUEUE_ADD) {
+        if (TTSOK) {
+            DONDTTSInstance.speak(speakWords, queueMode, null, "ID0")
+        }
     }
 }

@@ -5,9 +5,13 @@
     <string name="DONDGameSubTitle">Calvin C\'s learning project for Android app development</string>
     <string name="DONDGameAuthor">Calvin C</string>
 
-    <string name="caseBtnPrefix">Box</string>
-    <string name="caseRevealPrefix">txtRevealBox</string>
+    // obsolete resources - to be removed
+    <string name="boxBtnPrefix">Box</string>
+    <string name="boxRevealPrefix">txtRevealBox</string>
     <string name="amtAvailLblPrefix">Amount</string>
+    <string name="parmname_BoxChosen">CaseChosen</string>
+    <string name="parmname_ViewOnly">MoneyListViewOnly</string>
+
     <string name="hostWord_ChooseABox1">Choose a Box. This will be your Box.</string>
     <string name="hostWord_ChooseABox2">Choose a Box to open.</string>
     <string name="hostWord_TimeForOffer">It\'s time for an offer!</string>
@@ -18,10 +22,8 @@
     <string name="hostWord_OpenOneMoreBox">Open one more Box, then the Banker will make you an offer!</string>
     <string name="hostWord_OfferTaken">"Offer of %1$,d was taken"</string>
     <string name="hostWord_OfferRefused">"Offer of %1$,d was refused"</string>
-    <string name="hostWord_CaseContains">Case %1d contains $ %2$,d</string>
+    <string name="hostWord_BoxContains">Box %1d contains $ %2$,d</string>
     <string name="hostWord_Congrats1">Congratulations on winning %1$,d!</string>
-    <string name="parmname_CaseChosen">CaseChosen</string>
-    <string name="parmname_ViewOnly">MoneyListViewOnly</string>
     <string name="DONDYes">Yes</string>
     <string name="DONDNo">No</string>
     <string name="presentOffer">The Offer is %1$,d.  Do you want to take it?</string>
@@ -33,9 +35,11 @@
     <string name="QualityOfDeal_great">You made a great deal!</string>
     <string name="QualityOfDeal_good">You made a good deal!</string>
     <string name="QualityOfDeal_notgood">Too bad that wasn\'t the deal you wanted</string>
-
+    <string name="hostWord_YouveChosenBox">"You've chosen box number %1d. "</string>
 
     <!-- Strings used for fragments for navigation -->
     <string name="next">Next</string>
     <string name="previous">Previous</string>
+    <string name="DONDYourBoxIs">Your Box Is</string>
+
 </resources>
