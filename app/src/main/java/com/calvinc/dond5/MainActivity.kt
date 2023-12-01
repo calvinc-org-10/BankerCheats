@@ -99,11 +99,11 @@ fun PlayDOND() {
     */
     var DONDGameState:enumDONDGameState by remember { mutableStateOf(enumDONDGameState.DONDInit) }
     var afterAmountState: enumDONDGameState by remember { mutableStateOf(enumDONDGameState.DONDChooseNextBox) }
-    var DONDBoxesVisiblity= remember { mutableStateMapOf<Int,Boolean>()  }
-    var DONDBoxesContents= remember { mutableStateMapOf<Int,Int>()  }
-    var amountAvail = remember { mutableStateMapOf<Int,Boolean>() }
+    val DONDBoxesVisiblity= remember { mutableStateMapOf<Int,Boolean>()  }
+    val DONDBoxesContents= remember { mutableStateMapOf<Int,Int>()  }
+    val amountAvail = remember { mutableStateMapOf<Int,Boolean>() }
 
-    var hostWords: String = ""
+    var hostWords = ""
     var wordsCongrat = ""
     var offerAccepted: Boolean
 
@@ -232,7 +232,7 @@ fun PlayDOND() {
                     else
                         String.format("Your Box %1\$d contains %2$,d.", DONDGlobals.intMyBox, BoxMoney)
                     ) + System.lineSeparator() + String.format("Congratulations on winning %1$,d.", WonMoney) + System.lineSeparator()
-            var QualityOfDeal = WonMoney.toDouble() / (if (heldOnToEnd) DONDGlobals.offerMoney else BoxMoney)
+            val QualityOfDeal = WonMoney.toDouble() / (if (heldOnToEnd) DONDGlobals.offerMoney else BoxMoney)
             if (QualityOfDeal > 200) {
                 // incredible
                 wordsCongrat += stringResource(R.string.QualityOfDeal_incredible)
@@ -395,7 +395,6 @@ fun LoadBoxes(DONDBoxesContents:MutableMap<Int,Int>) {
     // this var is simply a shortcut, but it's used is several places
     val nBoxes = DONDGlobals.nBoxes
     val NUM_SHUFFLES = 1000
-    val tmpCheatBox = nBoxes    // tmpCheatBox is the box that holds the 1 000 000
     for (n in 1..nBoxes) {
         DONDBoxesContents[n] = n
     }
