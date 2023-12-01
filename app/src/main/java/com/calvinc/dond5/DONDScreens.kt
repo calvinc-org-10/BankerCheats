@@ -1,5 +1,6 @@
 package com.calvinc.dond5
 
+import android.speech.tts.TextToSpeech
 import android.widget.Button
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -43,7 +44,6 @@ import androidx.compose.ui.window.DialogProperties
 import com.calvinc.dond5.DONDGlobals.Amount
 import com.calvinc.dond5.DONDGlobals.CalvinCheat
 import com.calvinc.dond5.DONDGlobals.DONDUtter
-import com.calvinc.dond5.DONDGlobals.SplashDone
 import com.calvinc.dond5.DONDGlobals.hostWordFontSize
 import com.calvinc.dond5.DONDGlobals.intMyBox
 import com.calvinc.dond5.DONDGlobals.nBoxes
@@ -61,7 +61,6 @@ object DONDScreens {
         LaunchedEffect(key1 = Unit) {
             delay(SPLASH_DELAY)
             showSplash = false
-            SplashDone = true
         }
 
         Column(
@@ -124,7 +123,7 @@ object DONDScreens {
                 text = hostWords,
                 fontSize = hostWordFontSize.sp
             )
-            DONDUtter(hostWords)
+            DONDUtter(hostWords,TextToSpeech.QUEUE_FLUSH)
             Spacer(modifier = Modifier.height(12.dp))
             for (row in 1 until nBoxes step cpr) {
                 Row {
@@ -350,6 +349,9 @@ object DONDScreens {
         theOffer: String,
         playerAnswer: (Boolean) -> Unit
     ) {
+        val buttonWid = 70
+        val fontSizeAnswer = buttonWid/4
+        val spaceBetweenAnswers = buttonWid/2
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.Center,
@@ -363,13 +365,12 @@ object DONDScreens {
             )
             Spacer(modifier = Modifier.height(20.dp))
             Row(
-                modifier = Modifier.fillMaxWidth(.8f),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                val buttonWid = 70.dp
                 Button(
                     onClick = { playerAnswer(true) },
-                    modifier = Modifier.size(buttonWid),
+                    modifier = Modifier.size(buttonWid.dp),
                     contentPadding = PaddingValues(
                         start = 4.dp,
                         top = 4.dp,
@@ -378,12 +379,12 @@ object DONDScreens {
                     ),
                 )
                 {
-                    Text(stringResource(id = R.string.DONDYes), fontSize = 14.sp)
+                    Text(stringResource(id = R.string.DONDYes), fontSize = fontSizeAnswer.sp)
                 }
-                Spacer(modifier = Modifier.width(20.dp))
+                Spacer(modifier = Modifier.width(spaceBetweenAnswers.dp))
                 Button(
                     onClick = { playerAnswer(false) },
-                    modifier = Modifier.size(buttonWid),
+                    modifier = Modifier.size(buttonWid.dp),
                     contentPadding = PaddingValues(
                         start = 4.dp,
                         top = 4.dp,
@@ -392,7 +393,7 @@ object DONDScreens {
                     ),
                 )
                 {
-                    Text(stringResource(id = R.string.DONDNo), fontSize = 14.sp)
+                    Text(stringResource(id = R.string.DONDNo), fontSize = fontSizeAnswer.sp)
                 }
             }
         }

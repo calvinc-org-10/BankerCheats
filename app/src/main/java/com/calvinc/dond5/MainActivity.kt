@@ -115,7 +115,14 @@ fun PlayDOND() {
             DONDGlobals.offerMinPct = DONDGlobals.absOfferMinPct
             DONDGlobals.offerMaxPct = DONDGlobals.absOfferMaxPct
             DONDGlobals.offerMoney = 0
+            offerAccepted = false
             DONDGlobals.intMyBox = 0
+            DONDGlobals.lastBoxOpened = 0
+
+            // reset state and global vars
+            afterAmountState = enumDONDGameState.DONDChooseNextBox
+            hostWords = ""
+            wordsCongrat = ""
 
             for (n in 1..nBoxes) {
                 amountAvail[n] = true
@@ -369,7 +376,7 @@ fun PlayDOND() {
                 miscfunctions = {
                     when (it) {
                         "stop" -> DONDGameState = enumDONDGameState.DONDEndGame
-                        "again" -> {}
+                        "again" -> DONDGameState = enumDONDGameState.DONDActivateGame
                     }
                 },
                 onBoxOpen = { },    // intentionally empty - clicking a box should do nothing

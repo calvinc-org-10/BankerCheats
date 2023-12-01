@@ -31,7 +31,6 @@ object DONDGlobals {
     @JvmField
     var offerMoney: Long = 0
     @JvmField
-    var SplashDone = false
     var CalvinCheat = false
     var tmpCheatBox: Int = 0
 
