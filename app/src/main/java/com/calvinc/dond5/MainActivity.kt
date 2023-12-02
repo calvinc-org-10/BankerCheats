@@ -362,6 +362,7 @@ fun PlayDOND() {
         enumDONDGameState.DONDShowAmountsLeft -> {
             DONDScreens.MoneyListScreen(
                 hostWords = hostWords,
+                AmountOpened = DONDBoxesContents[DONDGlobals.lastBoxOpened]!!,
                 amountAvail = amountAvail.toMap(),
                 onOKClick = {
                     DONDGameState = afterAmountState

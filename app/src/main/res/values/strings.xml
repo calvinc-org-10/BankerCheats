@@ -22,7 +22,7 @@
     <string name="hostWord_OpenOneMoreBox">Open one more Box, then the Banker will make you an offer!</string>
     <string name="hostWord_OfferTaken">"Offer of %1$,d was taken"</string>
     <string name="hostWord_OfferRefused">"Offer of %1$,d was refused"</string>
-    <string name="hostWord_BoxContains">Box %1d contains $ %2$,d</string>
+    <string name="hostWord_BoxContains">Box %1d contains %2$,d</string>
     <string name="hostWord_Congrats1">Congratulations on winning %1$,d!</string>
     <string name="DONDYes">Yes</string>
     <string name="DONDNo">No</string>

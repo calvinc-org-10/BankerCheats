@@ -1,28 +1,38 @@
 package com.calvinc.dond5
 
 import android.speech.tts.TextToSpeech
-import android.widget.Button
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.ExperimentalTransitionApi
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateInt
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,19 +54,68 @@ import androidx.compose.ui.window.DialogProperties
 import com.calvinc.dond5.DONDGlobals.Amount
 import com.calvinc.dond5.DONDGlobals.CalvinCheat
 import com.calvinc.dond5.DONDGlobals.DONDUtter
-import com.calvinc.dond5.DONDGlobals.hostWordFontSize
 import com.calvinc.dond5.DONDGlobals.intMyBox
 import com.calvinc.dond5.DONDGlobals.nBoxes
 import com.calvinc.dond5.ui.theme.BankerCheatsTheme
 import kotlinx.coroutines.delay
 
-// TODO: const val for hostWords fontSize
 object DONDScreens {
+    const val hostWordFontSize = 20
+    const val AmountFontSize = 20
+    val AmountAvailColor = Color.Green
+    val AmountNotAvailColor = Color.Gray
+
+    /************************************
+     * ANIMATION ("glow") CLASSES, etc
+     ***********************************/
+
+    // Holds the animation values.
+    enum class AnimationState { Starting, Finished }
+
+    class TransitionData(
+        color: State<Color>,
+        fontsize: State<Int>
+    ) {
+        val color by color
+        val fontsize by fontsize
+    }
+
+    // Create a Transition and return its animation values.
+    @Composable
+    fun updateTransitionData(animationState: MutableTransitionState<AnimationState>): TransitionData {
+        val transition = updateTransition(animationState, label = "glow state")
+        val color = transition.animateColor(label = "color") { state ->
+            when (state) {
+                AnimationState.Starting -> AmountAvailColor
+                AnimationState.Finished -> AmountNotAvailColor
+            }
+        }
+        val size = transition.animateInt(label = "size") { state ->
+            when (state) {
+                AnimationState.Starting -> (AmountFontSize/3)
+                AnimationState.Finished -> AmountFontSize
+            }
+        }
+
+        return remember(transition) { TransitionData(color, size) }
+    }
+/*    class TransitionData(transition: Transition<AnimationState>) {
+        val color by color
+        val fontsize by fontsize
+
+        @Composable
+        private fun updateTransitionData(animationState: AnimationState): TransitionData {
+            val transition = updateTransition(animationState, label = "glow state")
+            return remember(transition) { TransitionData(color, size) }
+        }
+    }
+*/
+
 
     @Composable
     fun DONDSplashScreen() {
         var showSplash by remember { mutableStateOf(true) }
-        val SPLASH_DELAY: Long = 5000
+        @Suppress("LocalVariableName") val SPLASH_DELAY: Long = 5000
 
         LaunchedEffect(key1 = Unit) {
             delay(SPLASH_DELAY)
@@ -98,11 +157,11 @@ object DONDScreens {
 
     @Composable
     fun MainScreen(
-        DONDBoxesVisiblity:Map<Int,Boolean>,
+        @Suppress("LocalVariableName") DONDBoxesVisiblity:Map<Int,Boolean>,
         hostWords:String, congrats:String = "",
         onBoxOpen: (n:Int) -> Unit,
         miscfunctions: (f:String) -> Unit,
-        DONDBoxesContents:Map<Int,Int> = mapOf()
+        @Suppress("LocalVariableName") DONDBoxesContents:Map<Int,Int> = mapOf()
     ) {
         val endGameReveal = (congrats != "")
         val cpr = 5 // columns per row
@@ -140,7 +199,7 @@ object DONDScreens {
                             enabled = DONDBoxesVisiblity[row + col]!!,
                         )
                         {
-                            Column () {
+                            Column {
                                 Text(
                                     (row + col).toString(),
                                     fontSize = (boxWid/4).sp
@@ -224,16 +283,46 @@ object DONDScreens {
         }
     }
 
+    @OptIn(ExperimentalTransitionApi::class)
     @Composable
     fun MoneyListScreen(
         hostWords:String,
-        boxOpened:Int = 0,
+        AmountOpened:Int = 0,
         amountAvail:Map<Int,Boolean>,
         onOKClick: () -> Unit,
     ) {
-        val AmountFontSize = 20
-        val AmountAvailColor = Color.Green
-        val AmountNotAvailColor = Color.Gray
+        // I know working with actual sizes is "wrong", but I need consistent Box sizes.
+        // TODO: Find the "right" way to do this
+        val scrWid = LocalConfiguration.current.screenWidthDp
+        val scrHgt = LocalConfiguration.current.screenHeightDp
+        val boxWid = (scrWid * .45).toInt()
+        val boxWid_last = scrWid/2
+        val boxHgt = (scrHgt - (hostWordFontSize*2-2+12) + (12+20) - 200)/((nBoxes +1)/2)  // if you ask nicely, I'll lovingly explain this formula to you
+        val lftSpc1 = (scrWid * .05).toInt()
+
+        // for handling the "glowing" amount
+        /*
+        val animationState = remember { MutableTransitionState(AnimationState.Starting) }
+        animationState.targetState = AnimationState.Finished
+        val transitionData = updateTransitionData(animationState = animationState)
+        */
+        /* val animationState = remember { MutableTransitionState(true) }
+        animationState.targetState = true
+        val transition = rememberTransition(animationState, "glow")
+        val openAmountColor by transition.animateColor(label = "glowColor") {state ->
+            when (state) {
+                true -> AmountNotAvailColor
+                else -> AmountAvailColor
+            }
+        }
+        */
+        var amountShouldGlow by remember { mutableStateOf(true) }
+        val openAmountColor by animateColorAsState(
+            targetValue = if (amountShouldGlow) AmountAvailColor else AmountNotAvailColor,
+            animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse)
+        )
+
+
         // show available amounts and grey out BoxContents[BoxChosen]
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -263,52 +352,93 @@ object DONDScreens {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    //DONDAmountButton(btnNum = p1, avail = amountAvail[p1]!!)
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        onClick = {},
-                        elevation = ButtonDefaults.buttonElevation(),
+                    // Spacer(modifier = Modifier.width(lftSpc1.dp))
+                    var btnNum = p1
+                    var avail = amountAvail[p1]!!
+                    Box(
+                        modifier = Modifier
+                            // .fillMaxWidth(.5f)
+                            .height(boxHgt.dp)
+                            .width(boxWid.dp)
+                            .background(Color.Blue, RoundedCornerShape(90)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        val btnNum = p1; val avail = amountAvail[p1]!!
                         Text(
                             text = Amount[btnNum].toString(),
-                            fontSize = AmountFontSize.sp,
-                            color = if (avail) AmountAvailColor else AmountNotAvailColor
+                            fontSize = if (btnNum == AmountOpened)
+                                    // transitionData.fontsize.sp
+                                    AmountFontSize.sp
+                                else
+                                    AmountFontSize.sp,
+                            color = if (btnNum == AmountOpened)
+                                    animateColorAsState(
+                                        targetValue = AmountNotAvailColor,
+                                        animationSpec = tween(1000)
+                                    ).value
+                                else
+                                    (if (avail) AmountAvailColor else AmountNotAvailColor),
                         )
                     }
                     // second box on this row
-                    // DONDAmountButton(btnNum = p2, avail = amountAvail[p2]!!)
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        onClick = {},
-                        elevation = ButtonDefaults.buttonElevation(),
+                    btnNum = p2
+                    avail = amountAvail[p2]!!
+                    Box(
+                        modifier = Modifier
+                            // .fillMaxWidth(.5f)
+                            .height(boxHgt.dp)
+                            .width(boxWid.dp)
+                            .background(Color.Blue, RoundedCornerShape(90)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        val btnNum = p2; val avail = amountAvail[p2]!!
                         Text(
                             text = Amount[btnNum].toString(),
-                            fontSize = AmountFontSize.sp,
-                            color = if (avail) AmountAvailColor else AmountNotAvailColor
+                            fontSize = if (btnNum == AmountOpened)
+                                // transitionData.fontsize.sp
+                                AmountFontSize.sp
+                            else
+                                AmountFontSize.sp,
+                            color = if (btnNum == AmountOpened)
+                                animateColorAsState(
+                                    targetValue = AmountNotAvailColor,
+                                    animationSpec = tween(1000)
+                                ).value
+                            else
+                                (if (avail) AmountAvailColor else AmountNotAvailColor),
                         )
                     }
                 }
             }
+            @Suppress("KotlinConstantConditions")
             if ((nBoxes % 2) == 1) {
+                val p = nBoxes
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    val p = nBoxes
-                    // DONDAmountButton(btnNum = p, avail = amountAvail[p]!!)
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        onClick = {},
-                        elevation = ButtonDefaults.buttonElevation(),
+                    var btnNum = p
+                    var avail = amountAvail[p]!!
+                    Box(
+                        modifier = Modifier
+                            // .fillMaxWidth(.5f)
+                            .height(boxHgt.dp)
+                            .width(boxWid_last.dp)
+                            .background(Color.Blue, RoundedCornerShape(90)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        val btnNum = p; val avail = amountAvail[p]!!
                         Text(
                             text = Amount[btnNum].toString(),
-                            fontSize = AmountFontSize.sp,
-                            color = if (avail) AmountAvailColor else AmountNotAvailColor
+                            fontSize = if (btnNum == AmountOpened)
+                                // transitionData.fontsize.sp
+                                AmountFontSize.sp
+                            else
+                                AmountFontSize.sp,
+                            color = if (btnNum == AmountOpened)
+                                animateColorAsState(
+                                    targetValue = AmountNotAvailColor,
+                                    animationSpec = tween(1000)
+                                ).value
+                            else
+                                (if (avail) AmountAvailColor else AmountNotAvailColor),
                         )
                     }
                 }
@@ -317,30 +447,6 @@ object DONDScreens {
             Button(onClick = onOKClick) {
                 Text(text = stringResource(id = android.R.string.ok))
             }
-        }
-    }
-    @Composable
-    // TODO: figure out how to return a Button with the parms I want - what's here isn't it
-    //  also need to figure out how to do the equivalent of Modifier.weight
-    fun DONDAmountButton(contngRow:RowScope, btnNum:Int, avail: Boolean, flash: Boolean = false) {
-        val AmountFontSize = 20
-        val AmountAvailColor = Color.Green
-        val AmountNotAvailColor = Color.Gray
-        var retVal: Button
-        if (!flash) {
-            Button(
-                modifier = Modifier,
-                onClick = {},
-                elevation = ButtonDefaults.buttonElevation(),
-            ) {
-                Text(
-                    text = Amount[btnNum].toString(),
-                    fontSize = AmountFontSize.sp,
-                    color = if (avail) AmountAvailColor else AmountNotAvailColor
-                )
-            }
-        } else {
-            // TODO: animate the amount
         }
     }
 
@@ -427,6 +533,31 @@ object DONDScreens {
         )
     }
 }
+
+
+/*
+@Composable
+private fun AnimatingButton(btnNum: Int, transitionData: TransitionData) {
+    // UI tree
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(.5f)
+            .background(Color.Blue, RoundedCornerShape(90)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = Amount[btnNum].toString(),
+            fontSize = transitionData.fontsize.sp,
+            color = transitionData.color,
+        )
+    }
+}
+*/
+
+
+/******************************
+ * PREVIEWS
+ *****************************/
 
 @Preview(showBackground = true)
 @Composable

@@ -11,7 +11,6 @@ object DONDGlobals {
     const val offerMinPctDelta = 0.07
     const val absOfferMaxPct = 0.83
     const val offerMaxPctDelta = 0.0625
-    const val hostWordFontSize = 20
 
     lateinit var DONDTTSInstance: TextToSpeech
     var TTSOK = false
