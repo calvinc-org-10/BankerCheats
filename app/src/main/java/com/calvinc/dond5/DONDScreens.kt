@@ -2,13 +2,9 @@ package com.calvinc.dond5
 
 import android.speech.tts.TextToSpeech
 import androidx.compose.animation.animateColor
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.ExperimentalTransitionApi
 import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateInt
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -315,12 +311,12 @@ object DONDScreens {
                 else -> AmountAvailColor
             }
         }
-        */
         var amountShouldGlow by remember { mutableStateOf(true) }
         val openAmountColor by animateColorAsState(
             targetValue = if (amountShouldGlow) AmountAvailColor else AmountNotAvailColor,
             animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse)
         )
+        */
 
 
         // show available amounts and grey out BoxContents[BoxChosen]
@@ -363,6 +359,19 @@ object DONDScreens {
                             .background(Color.Blue, RoundedCornerShape(90)),
                         contentAlignment = Alignment.Center
                     ) {
+                        var animationState =
+                            remember { MutableTransitionState(AnimationState.Starting) }
+                        animationState.targetState = AnimationState.Finished
+                        val transition = updateTransition(
+                            transitionState = animationState,
+                            label = "boxglow1"
+                        )
+                        val openAmountColor by transition.animateColor(label = "glowColor") { state ->
+                            when (state) {
+                                AnimationState.Starting -> AmountAvailColor
+                                AnimationState.Finished -> AmountNotAvailColor
+                            }
+                        }
                         Text(
                             text = Amount[btnNum].toString(),
                             fontSize = if (btnNum == AmountOpened)
@@ -371,10 +380,7 @@ object DONDScreens {
                                 else
                                     AmountFontSize.sp,
                             color = if (btnNum == AmountOpened)
-                                    animateColorAsState(
-                                        targetValue = AmountNotAvailColor,
-                                        animationSpec = tween(1000)
-                                    ).value
+                                    openAmountColor
                                 else
                                     (if (avail) AmountAvailColor else AmountNotAvailColor),
                         )
@@ -390,18 +396,28 @@ object DONDScreens {
                             .background(Color.Blue, RoundedCornerShape(90)),
                         contentAlignment = Alignment.Center
                     ) {
+                        var animationState =
+                            remember { MutableTransitionState(AnimationState.Starting) }
+                        animationState.targetState = AnimationState.Finished
+                        val transition = updateTransition(
+                            transitionState = animationState,
+                            label = "boxglow1"
+                        )
+                        val openAmountColor by transition.animateColor(label = "glowColor") { state ->
+                            when (state) {
+                                AnimationState.Starting -> AmountAvailColor
+                                AnimationState.Finished -> AmountNotAvailColor
+                            }
+                        }
                         Text(
                             text = Amount[btnNum].toString(),
                             fontSize = if (btnNum == AmountOpened)
-                                // transitionData.fontsize.sp
+                            // transitionData.fontsize.sp
                                 AmountFontSize.sp
                             else
                                 AmountFontSize.sp,
                             color = if (btnNum == AmountOpened)
-                                animateColorAsState(
-                                    targetValue = AmountNotAvailColor,
-                                    animationSpec = tween(1000)
-                                ).value
+                                openAmountColor
                             else
                                 (if (avail) AmountAvailColor else AmountNotAvailColor),
                         )
@@ -425,18 +441,28 @@ object DONDScreens {
                             .background(Color.Blue, RoundedCornerShape(90)),
                         contentAlignment = Alignment.Center
                     ) {
+                        var animationState =
+                            remember { MutableTransitionState(AnimationState.Starting) }
+                        animationState.targetState = AnimationState.Finished
+                        val transition = updateTransition(
+                            transitionState = animationState,
+                            label = "boxglow1"
+                        )
+                        val openAmountColor by transition.animateColor(label = "glowColor") { state ->
+                            when (state) {
+                                AnimationState.Starting -> AmountAvailColor
+                                AnimationState.Finished -> AmountNotAvailColor
+                            }
+                        }
                         Text(
                             text = Amount[btnNum].toString(),
                             fontSize = if (btnNum == AmountOpened)
-                                // transitionData.fontsize.sp
+                            // transitionData.fontsize.sp
                                 AmountFontSize.sp
                             else
                                 AmountFontSize.sp,
                             color = if (btnNum == AmountOpened)
-                                animateColorAsState(
-                                    targetValue = AmountNotAvailColor,
-                                    animationSpec = tween(1000)
-                                ).value
+                                openAmountColor
                             else
                                 (if (avail) AmountAvailColor else AmountNotAvailColor),
                         )
