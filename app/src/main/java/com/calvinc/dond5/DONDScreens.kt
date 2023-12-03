@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -284,6 +285,25 @@ object DONDScreens {
     fun MoneyListScreen(
         hostWords:String,
         AmountOpened:Int = 0,
+        showOnly:Boolean = false,
+        amountAvail:Map<Int,Boolean>,
+        onOKClick: () -> Unit,
+    ) {
+        val passRange = if (showOnly) 0..0 else 1..2
+        for (pass in passRange) {
+            MoneyListScreen_actual(
+                hostWords = hostWords,
+                amountAvail = amountAvail,
+                AmountOpened = AmountOpened,
+                onOKClick = onOKClick,
+                passBoxOpen = pass,
+                )
+        }
+    }
+    @Composable  fun MoneyListScreen_actual(
+        hostWords:String,
+        AmountOpened:Int = 0,
+        passBoxOpen: Int = 0,
         amountAvail:Map<Int,Boolean>,
         onOKClick: () -> Unit,
     ) {
@@ -294,30 +314,33 @@ object DONDScreens {
         val boxWid = (scrWid * .45).toInt()
         val boxWid_last = scrWid/2
         val boxHgt = (scrHgt - (hostWordFontSize*2-2+12) + (12+20) - 200)/((nBoxes +1)/2)  // if you ask nicely, I'll lovingly explain this formula to you
-        val lftSpc1 = (scrWid * .05).toInt()
 
-        // for handling the "glowing" amount
-        /*
-        val animationState = remember { MutableTransitionState(AnimationState.Starting) }
-        animationState.targetState = AnimationState.Finished
-        val transitionData = updateTransitionData(animationState = animationState)
-        */
-        /* val animationState = remember { MutableTransitionState(true) }
-        animationState.targetState = true
-        val transition = rememberTransition(animationState, "glow")
-        val openAmountColor by transition.animateColor(label = "glowColor") {state ->
-            when (state) {
-                true -> AmountNotAvailColor
-                else -> AmountAvailColor
+        @Composable fun MLSBox(btnNum:Int): @Composable RowScope.() -> Unit {
+            var avail = amountAvail[btnNum]!!
+            var fontSz = AmountFontSize
+            var openAmountColor = (if (avail) AmountAvailColor else AmountNotAvailColor)
+            if (btnNum == AmountOpened) {
+                when (passBoxOpen) {
+                    1 -> { openAmountColor = AmountAvailColor }
+                    2 -> { openAmountColor = AmountNotAvailColor }
+                }
+            }
+            return {
+                Box(
+                    modifier = Modifier
+                        .height(boxHgt.dp)
+                        .width(boxWid.dp)
+                        .background(Color.Blue, RoundedCornerShape(90)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = Amount[btnNum].toString(),
+                        fontSize = fontSz.sp,
+                        color = openAmountColor,
+                    )
+                }
             }
         }
-        var amountShouldGlow by remember { mutableStateOf(true) }
-        val openAmountColor by animateColorAsState(
-            targetValue = if (amountShouldGlow) AmountAvailColor else AmountNotAvailColor,
-            animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse)
-        )
-        */
-
 
         // show available amounts and grey out BoxContents[BoxChosen]
         Column(
@@ -348,78 +371,53 @@ object DONDScreens {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    // Spacer(modifier = Modifier.width(lftSpc1.dp))
+                    // MLSBox(btnNum = p1)
+                    // MLSBox(btnNum = p2)
                     var btnNum = p1
                     var avail = amountAvail[p1]!!
+                    var fontSz = AmountFontSize
+                    var openAmountColor = (if (avail) AmountAvailColor else AmountNotAvailColor)
+                    if (btnNum == AmountOpened) {
+                        when (passBoxOpen) {
+                            1 -> { openAmountColor = AmountAvailColor }
+                            2 -> { openAmountColor = AmountNotAvailColor }
+                        }
+                    }
                     Box(
                         modifier = Modifier
-                            // .fillMaxWidth(.5f)
                             .height(boxHgt.dp)
                             .width(boxWid.dp)
                             .background(Color.Blue, RoundedCornerShape(90)),
                         contentAlignment = Alignment.Center
                     ) {
-                        var animationState =
-                            remember { MutableTransitionState(AnimationState.Starting) }
-                        animationState.targetState = AnimationState.Finished
-                        val transition = updateTransition(
-                            transitionState = animationState,
-                            label = "boxglow1"
-                        )
-                        val openAmountColor by transition.animateColor(label = "glowColor") { state ->
-                            when (state) {
-                                AnimationState.Starting -> AmountAvailColor
-                                AnimationState.Finished -> AmountNotAvailColor
-                            }
-                        }
                         Text(
                             text = Amount[btnNum].toString(),
-                            fontSize = if (btnNum == AmountOpened)
-                                    // transitionData.fontsize.sp
-                                    AmountFontSize.sp
-                                else
-                                    AmountFontSize.sp,
-                            color = if (btnNum == AmountOpened)
-                                    openAmountColor
-                                else
-                                    (if (avail) AmountAvailColor else AmountNotAvailColor),
+                            fontSize = fontSz.sp,
+                            color = openAmountColor,
                         )
                     }
                     // second box on this row
                     btnNum = p2
                     avail = amountAvail[p2]!!
+                    fontSz = AmountFontSize
+                    openAmountColor = (if (avail) AmountAvailColor else AmountNotAvailColor)
+                    if (btnNum == AmountOpened) {
+                        when (passBoxOpen) {
+                            1 -> { openAmountColor = AmountAvailColor }
+                            2 -> { openAmountColor = AmountNotAvailColor }
+                        }
+                    }
                     Box(
                         modifier = Modifier
-                            // .fillMaxWidth(.5f)
                             .height(boxHgt.dp)
                             .width(boxWid.dp)
                             .background(Color.Blue, RoundedCornerShape(90)),
                         contentAlignment = Alignment.Center
                     ) {
-                        var animationState =
-                            remember { MutableTransitionState(AnimationState.Starting) }
-                        animationState.targetState = AnimationState.Finished
-                        val transition = updateTransition(
-                            transitionState = animationState,
-                            label = "boxglow1"
-                        )
-                        val openAmountColor by transition.animateColor(label = "glowColor") { state ->
-                            when (state) {
-                                AnimationState.Starting -> AmountAvailColor
-                                AnimationState.Finished -> AmountNotAvailColor
-                            }
-                        }
                         Text(
                             text = Amount[btnNum].toString(),
-                            fontSize = if (btnNum == AmountOpened)
-                            // transitionData.fontsize.sp
-                                AmountFontSize.sp
-                            else
-                                AmountFontSize.sp,
-                            color = if (btnNum == AmountOpened)
-                                openAmountColor
-                            else
-                                (if (avail) AmountAvailColor else AmountNotAvailColor),
+                            fontSize = fontSz.sp,
+                            color = openAmountColor,
                         )
                     }
                 }
@@ -429,42 +427,30 @@ object DONDScreens {
                 val p = nBoxes
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.Center,
                 ) {
+                    // MLSBox(btnNum = p)
                     var btnNum = p
                     var avail = amountAvail[p]!!
+                    var fontSz = AmountFontSize
+                    var openAmountColor = (if (avail) AmountAvailColor else AmountNotAvailColor)
+                    if (btnNum == AmountOpened) {
+                        when (passBoxOpen) {
+                            1 -> { openAmountColor = AmountAvailColor }
+                            2 -> { openAmountColor = AmountNotAvailColor }
+                        }
+                    }
                     Box(
                         modifier = Modifier
-                            // .fillMaxWidth(.5f)
                             .height(boxHgt.dp)
                             .width(boxWid_last.dp)
                             .background(Color.Blue, RoundedCornerShape(90)),
                         contentAlignment = Alignment.Center
                     ) {
-                        var animationState =
-                            remember { MutableTransitionState(AnimationState.Starting) }
-                        animationState.targetState = AnimationState.Finished
-                        val transition = updateTransition(
-                            transitionState = animationState,
-                            label = "boxglow1"
-                        )
-                        val openAmountColor by transition.animateColor(label = "glowColor") { state ->
-                            when (state) {
-                                AnimationState.Starting -> AmountAvailColor
-                                AnimationState.Finished -> AmountNotAvailColor
-                            }
-                        }
                         Text(
                             text = Amount[btnNum].toString(),
-                            fontSize = if (btnNum == AmountOpened)
-                            // transitionData.fontsize.sp
-                                AmountFontSize.sp
-                            else
-                                AmountFontSize.sp,
-                            color = if (btnNum == AmountOpened)
-                                openAmountColor
-                            else
-                                (if (avail) AmountAvailColor else AmountNotAvailColor),
+                            fontSize = fontSz.sp,
+                            color = openAmountColor,
                         )
                     }
                 }
