@@ -28,7 +28,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,7 +53,6 @@ import com.calvinc.dond5.DONDGlobals.DONDUtter
 import com.calvinc.dond5.DONDGlobals.intMyBox
 import com.calvinc.dond5.DONDGlobals.nBoxes
 import com.calvinc.dond5.ui.theme.BankerCheatsTheme
-import kotlinx.coroutines.delay
 
 object DONDScreens {
     const val hostWordFontSize = 20
@@ -114,10 +112,12 @@ object DONDScreens {
         var showSplash by remember { mutableStateOf(true) }
         @Suppress("LocalVariableName") val SPLASH_DELAY: Long = 5000
 
+        /*
         LaunchedEffect(key1 = Unit) {
             delay(SPLASH_DELAY)
             showSplash = false
         }
+        */
 
         Column(
             modifier = Modifier.fillMaxWidth(),

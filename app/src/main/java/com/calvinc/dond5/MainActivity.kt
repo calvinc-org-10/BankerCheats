@@ -1,5 +1,6 @@
 package com.calvinc.dond5
 
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
@@ -14,14 +15,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
-import br.com.frazo.splashscreens.CountDownSplashScreen
+import br.com.frazo.splashscreens.SplashScreen
 import com.calvinc.dond5.ui.theme.BankerCheatsTheme
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 // TODO: Move DONDGlobals to companion class?
-    val SPLASH_DELAY: Long = 5000
+    // val SPLASH_DELAY: Long = 5000
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,37 +32,34 @@ class MainActivity : ComponentActivity() {
             DONDGlobals.TTSOK = (it == TextToSpeech.SUCCESS)
             if (DONDGlobals.TTSOK) {
                 DONDGlobals.DONDTTSInstance.setLanguage(Locale.US)
-                // DONDGlobals.DONDTTSInstance.setPitch(0.95f)
-                // DONDGlobals.DONDTTSInstance.setSpeechRate(0.8f)
-                /*
-                val vSet = DONDGlobals.DONDTTSInstance.voices
-                val nVox = DONDGlobals.RandLong(0,(vSet.size-1))
-                val myVox = vSet.elementAt(nVox)
-                DONDGlobals.DONDTTSInstance.setVoice(myVox)
-                val announceVox = "I am voice $nVox of ${vSet.size}."
-                DONDGlobals.DONDUtter(announceVox)
-                */
             }
         }
         fnfinish = this::finish
 
         setContent {
             BankerCheatsTheme {
-                CountDownSplashScreen(
+                var finished by remember { mutableStateOf(false) }
+                SplashScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.background),
-                    totalTimeInMillis = SPLASH_DELAY,
+                    finished = finished,
                     beforeFinished = {
                         DONDScreens.DONDSplashScreen()
+                        var DONDAudioTheme = MediaPlayer.create(LocalView.current.context,R.raw.bankercheatintrov1)
+                        DONDAudioTheme.setOnCompletionListener {
+                            it.release()
+                            finished = true
+                        }
+                        DONDAudioTheme.start()
                     },
                     whenFinished = {
                         PlayDOND()
                     }
                 )
+                }
             }
         }
-    }
 
     override fun onPause() {
         if (DONDGlobals.TTSOK) {
