@@ -2,7 +2,6 @@ package com.calvinc.dond5
 
 import android.speech.tts.TextToSpeech
 import androidx.compose.animation.animateColor
-import androidx.compose.animation.core.ExperimentalTransitionApi
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.animateInt
 import androidx.compose.animation.core.updateTransition
@@ -280,7 +279,7 @@ object DONDScreens {
         }
     }
 
-    @OptIn(ExperimentalTransitionApi::class)
+    // @OptIn(ExperimentalTransitionApi::class)
     @Composable
     fun MoneyListScreen(
         hostWords:String,

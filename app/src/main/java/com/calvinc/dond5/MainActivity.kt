@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
                     finished = finished,
                     beforeFinished = {
                         DONDScreens.DONDSplashScreen()
-                        var DONDAudioTheme = MediaPlayer.create(LocalView.current.context,R.raw.bankercheatintrov1)
+                        val DONDAudioTheme = MediaPlayer.create(LocalView.current.context,R.raw.bankercheatintrov1)
                         DONDAudioTheme.setOnCompletionListener {
                             it.release()
                             finished = true
@@ -101,6 +101,7 @@ fun PlayDOND() {
     val DONDBoxesVisiblity= remember { mutableStateMapOf<Int,Boolean>()  }
     val DONDBoxesContents= remember { mutableStateMapOf<Int,Int>()  }
     val amountAvail = remember { mutableStateMapOf<Int,Boolean>() }
+    var AmountListPeekedOnly by remember { mutableStateOf(false) }
 
     var hostWords = ""
     var wordsCongrat = ""
@@ -120,6 +121,7 @@ fun PlayDOND() {
 
             // reset state and global vars
             afterAmountState = enumDONDGameState.DONDChooseNextBox
+            AmountListPeekedOnly = false
             hostWords = ""
             wordsCongrat = ""
 
@@ -180,11 +182,15 @@ fun PlayDOND() {
 
         enumDONDGameState.DONDChooseNextBox -> {
             val nBox = DONDGlobals.lastBoxOpened
-            hostWords = String.format(
-                stringResource(R.string.hostWord_BoxContains),
-                nBox,
-                DONDGlobals.Amount[DONDBoxesContents[nBox]!!]
-            ) + System.lineSeparator()
+            hostWords = if (nBox != DONDGlobals.intMyBox)
+                    String.format(
+                        stringResource(R.string.hostWord_BoxContains),
+                        nBox,
+                        if (nBox!=0) DONDGlobals.Amount[DONDBoxesContents[nBox]!!] else 0
+                    ) + System.lineSeparator()
+                else
+                    // lastOpenedBox was MyBox; we prolly opened it and checked Amounts in play.  Don't reveal contents of MyBox
+                    ""
 
             if (DONDGlobals.boxesOpened >= DONDGlobals.toOpen) {
                 hostWords += stringResource(R.string.hostWord_TimeForOffer)
@@ -199,7 +205,7 @@ fun PlayDOND() {
 
         enumDONDGameState.DONDShowAmountsLeft -> {
             val nBox = DONDGlobals.lastBoxOpened
-            hostWords = if (nBox != 0)
+            hostWords = if (nBox != 0 && !AmountListPeekedOnly)
                 String.format(
                     stringResource(R.string.hostWord_BoxContains),
                     nBox,
@@ -278,6 +284,7 @@ fun PlayDOND() {
                         "stop" -> DONDGameState = enumDONDGameState.DONDEndGame
                         "amounts" -> {
                             afterAmountState = DONDGameState
+                            AmountListPeekedOnly = true
                             DONDGameState = enumDONDGameState.DONDShowAmountsLeft
                         }
                     }
@@ -293,6 +300,7 @@ fun PlayDOND() {
                         "stop" -> DONDGameState = enumDONDGameState.DONDEndGame
                         "amounts" -> {
                             afterAmountState = enumDONDGameState.DONDChooseNextBox
+                            AmountListPeekedOnly = true
                             DONDGameState = enumDONDGameState.DONDShowAmountsLeft
                         }
                     }
@@ -308,6 +316,7 @@ fun PlayDOND() {
                         DONDGlobals.boxesOpened++
                         amountAvail[DONDBoxesContents[n]!!] = false
                         afterAmountState = enumDONDGameState.DONDChooseNextBox
+                        AmountListPeekedOnly = false
                         DONDGameState = enumDONDGameState.DONDShowAmountsLeft
                     }
                 },
@@ -326,13 +335,8 @@ fun PlayDOND() {
                 theOffer = hostWords,
                 playerAnswer = {
                     offerAccepted = it
-                    if (offerAccepted) {
-                        // congratulate and leave
-                        DONDGameState = enumDONDGameState.DONDCongratulate
-                    } else {
-                        DONDGameState = enumDONDGameState.DONDStartNewRound
+                    DONDGameState = if (offerAccepted) enumDONDGameState.DONDCongratulate else enumDONDGameState.DONDStartNewRound
                     }
-                }
             )
         }
         enumDONDGameState.DONDChooseNextBox -> {
@@ -344,6 +348,7 @@ fun PlayDOND() {
                         "stop" -> DONDGameState = enumDONDGameState.DONDEndGame
                         "amounts" -> {
                             afterAmountState = DONDGameState
+                            AmountListPeekedOnly = true
                             DONDGameState = enumDONDGameState.DONDShowAmountsLeft
                         }
                     }
@@ -354,14 +359,16 @@ fun PlayDOND() {
                     DONDGlobals.boxesOpened++
                     amountAvail[DONDBoxesContents[n]!!] = false
                     afterAmountState = enumDONDGameState.DONDChooseNextBox
+                    AmountListPeekedOnly = false
                     DONDGameState = enumDONDGameState.DONDShowAmountsLeft
                 },
             )
         }
         enumDONDGameState.DONDShowAmountsLeft -> {
+            val nBox = DONDGlobals.lastBoxOpened
             DONDScreens.MoneyListScreen(
                 hostWords = hostWords,
-                AmountOpened = DONDBoxesContents[DONDGlobals.lastBoxOpened]!!,
+                AmountOpened = if (nBox != 0 && nBox != DONDGlobals.intMyBox) DONDBoxesContents[DONDGlobals.lastBoxOpened]!! else 0,
                 amountAvail = amountAvail.toMap(),
                 onOKClick = {
                     DONDGameState = afterAmountState
