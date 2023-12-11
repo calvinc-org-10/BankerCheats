@@ -1,10 +1,6 @@
 package com.calvinc.dond5
 
 import android.speech.tts.TextToSpeech
-import androidx.compose.animation.animateColor
-import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.core.animateInt
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +23,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,14 +49,14 @@ import com.calvinc.dond5.DONDGlobals.nBoxes
 import com.calvinc.dond5.ui.theme.BankerCheatsTheme
 
 object DONDScreens {
-    const val hostWordFontSize = 20
-    const val AmountFontSize = 20
-    val AmountAvailColor = Color.Green
-    val AmountNotAvailColor = Color.Gray
+    private const val hostWordFontSize = 20
+    private const val AmountFontSize = 20
+    private val AmountAvailColor = Color.Green
+    private val AmountNotAvailColor = Color.Gray
 
     /************************************
      * ANIMATION ("glow") CLASSES, etc
-     ***********************************/
+     ***********************************
 
     // Holds the animation values.
     enum class AnimationState { Starting, Finished }
@@ -104,20 +99,11 @@ object DONDScreens {
         }
     }
 */
-
+    */
 
     @Composable
-    fun DONDSplashScreen() {
+    fun DONDSplashScreen(emergencyExit: ()->Unit = {}) {
         var showSplash by remember { mutableStateOf(true) }
-        @Suppress("LocalVariableName") val SPLASH_DELAY: Long = 5000
-
-        /*
-        LaunchedEffect(key1 = Unit) {
-            delay(SPLASH_DELAY)
-            showSplash = false
-        }
-        */
-
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.Center,
@@ -144,9 +130,19 @@ object DONDScreens {
                     fontSize = 30.sp,
                     textAlign = TextAlign.Center,
                 )
-                Button(
-                    onClick = { CalvinCheat = true }
-                ) { Text(stringResource(id = R.string.DONDGameAuthor)) }
+                Row (modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Column (horizontalAlignment = Alignment.Start) {
+                        Button(
+                            onClick = { CalvinCheat = true }
+                        ) { Text(stringResource(id = R.string.DONDGameAuthor)) }
+                    }
+                    /*
+                    Column (horizontalAlignment = AbsoluteAlignment.Right) {
+                        Button(onClick = emergencyExit) {Text("EE") }
+                    }
+                    */
+                }
+
             }
         }
     }
@@ -154,7 +150,7 @@ object DONDScreens {
     @Composable
     fun MainScreen(
         @Suppress("LocalVariableName") DONDBoxesVisiblity:Map<Int,Boolean>,
-        hostWords:String, congrats:String = "",
+        hostWords:hostWords, congrats:String = "",
         onBoxOpen: (n:Int) -> Unit,
         miscfunctions: (f:String) -> Unit,
         @Suppress("LocalVariableName") DONDBoxesContents:Map<Int,Int> = mapOf()
@@ -175,10 +171,10 @@ object DONDScreens {
         {
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = hostWords,
+                text = hostWords.screen,
                 fontSize = hostWordFontSize.sp
             )
-            DONDUtter(hostWords,TextToSpeech.QUEUE_FLUSH)
+            DONDUtter(hostWords.spoken,TextToSpeech.QUEUE_FLUSH)
             Spacer(modifier = Modifier.height(12.dp))
             for (row in 1 until nBoxes step cpr) {
                 Row {
@@ -282,7 +278,7 @@ object DONDScreens {
     // @OptIn(ExperimentalTransitionApi::class)
     @Composable
     fun MoneyListScreen(
-        hostWords:String,
+        hostWords:hostWords,
         AmountOpened:Int = 0,
         showOnly:Boolean = false,
         amountAvail:Map<Int,Boolean>,
@@ -300,7 +296,7 @@ object DONDScreens {
         }
     }
     @Composable  fun MoneyListScreen_actual(
-        hostWords:String,
+        hostWords:hostWords,
         AmountOpened:Int = 0,
         passBoxOpen: Int = 0,
         amountAvail:Map<Int,Boolean>,
@@ -314,9 +310,11 @@ object DONDScreens {
         val boxWid_last = scrWid/2
         val boxHgt = (scrHgt - (hostWordFontSize*2-2+12) + (12+20) - 200)/((nBoxes +1)/2)  // if you ask nicely, I'll lovingly explain this formula to you
 
+        //TODO: See https://developer.android.com/jetpack/compose/layouts/custom to figure out how to implement this
+        @Suppress("unused")
         @Composable fun MLSBox(btnNum:Int): @Composable RowScope.() -> Unit {
-            var avail = amountAvail[btnNum]!!
-            var fontSz = AmountFontSize
+            val avail = amountAvail[btnNum]!!
+            val fontSz = AmountFontSize
             var openAmountColor = (if (avail) AmountAvailColor else AmountNotAvailColor)
             if (btnNum == AmountOpened) {
                 when (passBoxOpen) {
@@ -349,7 +347,7 @@ object DONDScreens {
         ) {
             // DONDUtter(hostWords) - nope - this phrase is repeated on MainScreen
             Text(
-                text = hostWords,
+                text = hostWords.screen,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
                 fontSize = hostWordFontSize.sp,
@@ -363,6 +361,7 @@ object DONDScreens {
             )
             Spacer(modifier = Modifier.height(12.dp))
             for (row in 1..nBoxes / 2) {
+                @Suppress("UnnecessaryVariable")
                 val p1 = row
                 val p2 = row + nBoxes / 2
                 // first box on this row
@@ -429,9 +428,10 @@ object DONDScreens {
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     // MLSBox(btnNum = p)
-                    var btnNum = p
-                    var avail = amountAvail[p]!!
-                    var fontSz = AmountFontSize
+                    @Suppress("UnnecessaryVariable")
+                    val btnNum = p
+                    val avail = amountAvail[p]!!
+                    val fontSz = AmountFontSize
                     var openAmountColor = (if (avail) AmountAvailColor else AmountNotAvailColor)
                     if (btnNum == AmountOpened) {
                         when (passBoxOpen) {
@@ -518,7 +518,8 @@ object DONDScreens {
 
     @Composable
     fun TimeForOffer(
-        hostWords: String,
+        showWords:String,
+        sayWords:String,
         msgAcknowleged: () -> Unit
     ) {
         val buttonFontSize = 18
@@ -531,11 +532,11 @@ object DONDScreens {
             },
             icon = { Icon(Icons.Default.AccountBalance,contentDescription = null) },
             title = {
-                Text("It's Time For An Offer!")
+                Text(stringResource(id = R.string.hostWord_TimeForOffer))
             },
             text = {
-                DONDUtter(hostWords)
-                Text(text = hostWords, fontSize = hostWordFontSize.sp)
+                DONDUtter(sayWords)
+                Text(text = showWords, fontSize = hostWordFontSize.sp)
             },
             properties = DialogProperties(
                 dismissOnBackPress = true,
@@ -584,9 +585,10 @@ fun MainScreenPreview() {
     val dummyMap = mutableMapOf<Int,Boolean>()
     for (i in 1..nBoxes) { dummyMap[i] = true }
     BankerCheatsTheme {
+        hostWords.screen = "Host Words Go Here"
         DONDScreens.MainScreen(
             DONDBoxesVisiblity = dummyMap,
-            hostWords = "Host Words Go Here",
+            hostWords = hostWords,
             onBoxOpen = { },
             miscfunctions = { }
         )
@@ -604,8 +606,9 @@ fun MoneyListScreenPreview() {
         dummyAvailMap[i] = true
     }
     BankerCheatsTheme {
+        hostWords.screen = "Boxes contain Money!!"
         DONDScreens.MoneyListScreen(
-            hostWords = "Boxes contain Money!!",
+            hostWords = hostWords,
             amountAvail = dummyAvailMap,
             onOKClick = { },
         )
@@ -626,9 +629,10 @@ fun OfferScreenPreview() {
 @Composable
 fun TimeForOfferPreview() {
     BankerCheatsTheme {
+        hostWords.screen = "Do You Want Money?"
         DONDScreens.TimeForOffer(
-            "Do You Want Money?",
-            {}
-        )
+            stringResource(id = R.string.hostWord_TimeForOffer),
+            ""
+        ) {}
     }
 }
