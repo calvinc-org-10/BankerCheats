@@ -18,22 +18,38 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import br.com.frazo.splashscreens.SplashScreen
+import com.calvinc.dond5.DONDGlobals.Amount
+import com.calvinc.dond5.DONDGlobals.CalvinCheat
+import com.calvinc.dond5.DONDGlobals.DONDTTSInstance
+import com.calvinc.dond5.DONDGlobals.absOfferMaxPct
+import com.calvinc.dond5.DONDGlobals.absOfferMinPct
+import com.calvinc.dond5.DONDGlobals.bigMoneyMinimum
+import com.calvinc.dond5.DONDGlobals.boxesOpened
+import com.calvinc.dond5.DONDGlobals.intMyBox
+import com.calvinc.dond5.DONDGlobals.lastBoxOpened
+import com.calvinc.dond5.DONDGlobals.nBoxes
+import com.calvinc.dond5.DONDGlobals.offerMaxPct
+import com.calvinc.dond5.DONDGlobals.offerMaxPctDelta
+import com.calvinc.dond5.DONDGlobals.offerMinPct
+import com.calvinc.dond5.DONDGlobals.offerMinPctDelta
+import com.calvinc.dond5.DONDGlobals.offerMoney
+import com.calvinc.dond5.DONDGlobals.ouchWords
+import com.calvinc.dond5.DONDGlobals.ouchwordProbability
+import com.calvinc.dond5.DONDGlobals.roundNum
+import com.calvinc.dond5.DONDGlobals.tmpCheatBox
+import com.calvinc.dond5.DONDGlobals.toOpen
+import com.calvinc.dond5.DONDGlobals.toOpenStart
 import com.calvinc.dond5.ui.theme.BankerCheatsTheme
 import java.util.Locale
+import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
-// TODO: Move DONDGlobals to companion class?
     // val SPLASH_DELAY: Long = 5000
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        DONDGlobals.DONDTTSInstance = TextToSpeech(this) {
-            DONDGlobals.TTSOK = (it == TextToSpeech.SUCCESS)
-            if (DONDGlobals.TTSOK) {
-                DONDGlobals.DONDTTSInstance.setLanguage(Locale.US)
-            }
-        }
+        startTTS()
         fnfinish = this::finish
 
         setContent {
@@ -45,11 +61,14 @@ class MainActivity : ComponentActivity() {
                         .background(MaterialTheme.colorScheme.background),
                     finished = finished,
                     beforeFinished = {
-                        DONDScreens.DONDSplashScreen()
                         val DONDAudioTheme = MediaPlayer.create(LocalView.current.context,R.raw.bankercheatintrov1)
                         DONDAudioTheme.setOnCompletionListener {
-                            it.release()
                             finished = true
+                            it.release()
+                        }
+                        DONDScreens.DONDSplashScreen {
+                            finished=true
+                            DONDAudioTheme.release()
                         }
                         DONDAudioTheme.start()
                     },
@@ -62,13 +81,29 @@ class MainActivity : ComponentActivity() {
         }
 
     override fun onPause() {
-        if (DONDGlobals.TTSOK) {
-            DONDGlobals.DONDTTSInstance.stop()
-            DONDGlobals.DONDTTSInstance.shutdown()
-        }
+        stopTTS()
         super.onPause()
     }
 
+    override fun onRestart() {
+        startTTS()
+        super.onRestart()
+    }
+
+    private fun startTTS() {
+        DONDTTSInstance = TextToSpeech(this) {
+            DONDGlobals.TTSOK = (it == TextToSpeech.SUCCESS)
+            if (DONDGlobals.TTSOK) {
+                DONDTTSInstance.setLanguage(Locale.US)
+            }
+        }
+    }
+    private fun stopTTS() {
+        if (DONDGlobals.TTSOK) {
+            DONDTTSInstance.stop()
+            DONDTTSInstance.shutdown()
+        }
+    }
     companion object {
         lateinit var fnfinish: () -> Unit
     }
@@ -85,11 +120,7 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-// TODO: Move vars from DONDGlobals here
 fun PlayDOND() {
-    // this var is simply a shortcut, but it's used is several places
-    val nBoxes = DONDGlobals.nBoxes
-
     /*
     var DONDGameState = remember { mutableStateOf(enumDONDGameState.DONDInit) }
     var DONDBoxesVisibility= rememberSaveable { mutableStateMapOf<Int,Boolean>()  }
@@ -103,26 +134,39 @@ fun PlayDOND() {
     val amountAvail = remember { mutableStateMapOf<Int,Boolean>() }
     var AmountListPeekedOnly by remember { mutableStateOf(false) }
 
-    var hostWords = ""
+    // var hostWords = ""
     var wordsCongrat = ""
     var offerAccepted: Boolean
+
+    @Suppress("unused")
+    fun nClosedCases(): Int {
+        var n = 0
+
+        for (i in 1..nBoxes) {
+            if (amountAvail[i]!!) n++
+        }
+
+        return n
+    }
 
     // set up variables
     when (DONDGameState) {
         enumDONDGameState.DONDInit,
         enumDONDGameState.DONDActivateGame -> {
-            // do I need to create and check a flag to see if gameStarted ?
-            DONDGlobals.offerMinPct = DONDGlobals.absOfferMinPct
-            DONDGlobals.offerMaxPct = DONDGlobals.absOfferMaxPct
-            DONDGlobals.offerMoney = 0
+            offerMinPct = absOfferMinPct
+            offerMaxPct = absOfferMaxPct
+            offerMoney = 0
             offerAccepted = false
-            DONDGlobals.intMyBox = 0
-            DONDGlobals.lastBoxOpened = 0
+            intMyBox = 0
+            lastBoxOpened = 0
 
             // reset state and global vars
             afterAmountState = enumDONDGameState.DONDChooseNextBox
             AmountListPeekedOnly = false
-            hostWords = ""
+            with (hostWords) {
+                screen = ""
+                spoken = ""
+            }
             wordsCongrat = ""
 
             for (n in 1..nBoxes) {
@@ -131,49 +175,64 @@ fun PlayDOND() {
             }
             LoadBoxes(DONDBoxesContents)
 
-            DONDGlobals.roundNum = 0
-            DONDGlobals.toOpen = DONDGlobals.toOpenStart
-            DONDGlobals.boxesOpened = 0
+            roundNum = 0
+            toOpen = toOpenStart+1  // 1 added because 1 will be subtracted at start of round
+            boxesOpened = 0
             val hostWords_Cheat =
-                if (DONDGlobals.CalvinCheat) "Cheat: " + DONDGlobals.tmpCheatBox + System.lineSeparator() else ""
-            hostWords =
-                hostWords_Cheat + stringResource(id = R.string.hostWord_ChooseABox1)
+                if (CalvinCheat) "Cheat: " + tmpCheatBox + System.lineSeparator() else ""
+            with (hostWords) {
+                screen = hostWords_Cheat + stringResource(id = R.string.hostWord_ChooseABox1)
+                spoken = screen
+            }
 
             DONDGameState = enumDONDGameState.DONDPickMyBox
         }
 
         enumDONDGameState.DONDPickMyBox -> {
             val hostWords_Cheat =
-                if (DONDGlobals.CalvinCheat) "Cheat: " + DONDGlobals.tmpCheatBox + System.lineSeparator() else ""
-            hostWords =
-                hostWords_Cheat + stringResource(id = R.string.hostWord_ChooseABox1)
+                if (CalvinCheat) "Cheat: " + tmpCheatBox + System.lineSeparator() else ""
+            with (hostWords) {
+                screen = hostWords_Cheat + stringResource(id = R.string.hostWord_ChooseABox1)
+                spoken = screen
+            }
         }
 
         enumDONDGameState.DONDStartNewRound -> {
-            DONDGlobals.roundNum++
-            if (DONDGlobals.roundNum <= DONDGlobals.FinalRound) {
-                DONDGlobals.boxesOpened = 0
-                hostWords = ""
-                if (DONDGlobals.roundNum > 1) {
-                    hostWords = stringResource(
-                        R.string.hostWord_OfferRefused,
-                        DONDGlobals.offerMoney
-                    ) + System.lineSeparator()
-
-                    // adjust bank offer constraints
-                    DONDGlobals.offerMinPct += DONDGlobals.offerMinPctDelta
-                    DONDGlobals.offerMaxPct += DONDGlobals.offerMaxPctDelta
-
-                    if (DONDGlobals.toOpen > 1) {
-                        DONDGlobals.toOpen--
-                    }
+            roundNum++
+            if (nClosedCases() > 2) {
+                boxesOpened = 0
+                hostWords.clearAll()
+                if (roundNum > 1) {
+                    hostWords.setAll(
+                        stringResource(
+                            R.string.hostWord_OfferRefused,
+                            offerMoney
+                        ) + System.lineSeparator()
+                    )
                 }
-                if (DONDGlobals.roundNum == 1) { hostWords += stringResource(id = R.string.hostWord_YouveChosenBox, DONDGlobals.intMyBox) }
+
+                // adjust bank offer constraints
+                offerMinPct += offerMinPctDelta
+                offerMaxPct += offerMaxPctDelta
+
+                if (toOpen > 1) {
+                    toOpen--
+                }
+                if (roundNum == 1) {
+                    hostWords.addToall(
+                        stringResource(
+                            id = R.string.hostWord_YouveChosenBox,
+                            intMyBox
+                        )
+                    )
+                }
 
                 //TODO: Look at Plural resources or MessageFormat class
-                hostWords += stringResource(
-                    if (DONDGlobals.toOpen == 1) R.string.hostWord_TimeToOpen1Box else R.string.hostWord_TimeToOpenBoxes,
-                    DONDGlobals.toOpen
+                hostWords.addToall(
+                    stringResource(
+                        if (toOpen == 1) R.string.hostWord_TimeToOpen1Box else R.string.hostWord_TimeToOpenBoxes,
+                        toOpen
+                    )
                 )
             } else {
                 DONDGameState = enumDONDGameState.DONDCongratulate
@@ -181,63 +240,82 @@ fun PlayDOND() {
         }
 
         enumDONDGameState.DONDChooseNextBox -> {
-            val nBox = DONDGlobals.lastBoxOpened
-            hostWords = if (nBox != DONDGlobals.intMyBox)
+            val nBox = lastBoxOpened
+            with (hostWords) {
+                val moneyInBox = if (nBox!=0 && nBox != intMyBox) Amount[DONDBoxesContents[nBox]!!] else 0
+                screen = if (nBox != intMyBox)
                     String.format(
                         stringResource(R.string.hostWord_BoxContains),
                         nBox,
-                        if (nBox!=0) DONDGlobals.Amount[DONDBoxesContents[nBox]!!] else 0
+                        moneyInBox
                     ) + System.lineSeparator()
                 else
-                    // lastOpenedBox was MyBox; we prolly opened it and checked Amounts in play.  Don't reveal contents of MyBox
+                // lastOpenedBox was MyBox; we prolly opened it and checked Amounts in play.  Don't reveal contents of MyBox
                     ""
 
-            if (DONDGlobals.boxesOpened >= DONDGlobals.toOpen) {
-                hostWords += stringResource(R.string.hostWord_TimeForOffer)
+                spoken = ""
+                if (!AmountListPeekedOnly)
+                    if (moneyInBox >= bigMoneyMinimum)
+                        if (Random.nextFloat() <= (ouchwordProbability + (0.6f*moneyInBox)/(Amount[nBoxes]-bigMoneyMinimum)))
+                            spoken = ouchWords[Random.nextInt(ouchWords.size)]
+                spoken += screen
+            }
+
+            if (boxesOpened >= toOpen) {
+                hostWords.addToall(stringResource(id = R.string.hostWord_TimeForOffer))
                 DONDGameState = enumDONDGameState.DONDPrepareForOffer
             } else {
-                hostWords += stringResource(
-                    id = if (DONDGlobals.toOpen - DONDGlobals.boxesOpened == 1) R.string.hostWord_OpenOneMoreBox else R.string.hostWord_OpenAnotherBoxofN,
-                    DONDGlobals.toOpen - DONDGlobals.boxesOpened
-                )
+                hostWords.addToall(stringResource(
+                        id = if (toOpen - boxesOpened == 1) R.string.hostWord_OpenOneMoreBox else R.string.hostWord_OpenAnotherBoxofN,
+                        toOpen - boxesOpened
+                    ))
             }
         }
 
         enumDONDGameState.DONDShowAmountsLeft -> {
-            val nBox = DONDGlobals.lastBoxOpened
-            hostWords = if (nBox != 0 && !AmountListPeekedOnly)
-                String.format(
-                    stringResource(R.string.hostWord_BoxContains),
-                    nBox,
-                    DONDGlobals.Amount[DONDBoxesContents[nBox]!!]
-                )
-            else
-                ""
+            val nBox = lastBoxOpened
+                with (hostWords) {
+                    screen = if (nBox != 0 && !AmountListPeekedOnly)
+                        String.format(
+                            stringResource(R.string.hostWord_BoxContains),
+                            nBox,
+                            Amount[DONDBoxesContents[nBox]!!]
+                        )
+                    else
+                        ""
+                }
         }
 
         enumDONDGameState.DONDMakeOffer -> {
             //TODO: Do string resources
-            hostWords = stringResource(R.string.presentOffer, CalculateOffer(amountAvail.toMap()))
-            hostWords += System.lineSeparator()
-            val n = if (DONDGlobals.toOpen < 2) 1 else DONDGlobals.toOpen - 1
-            hostWords += if (DONDGlobals.roundNum >= DONDGlobals.FinalRound) "This will be your last offer."
-                else "If you don't accept the offer, you must open $n "+(if (n==1) "box" else "boxes")+"."
-            hostWords += System.lineSeparator() + "Do you accept this offer?"
+            with (hostWords) {
+                screen = stringResource(R.string.presentOffer, CalculateOffer(amountAvail.toMap()))
+                screen += System.lineSeparator()
+                val n = if (toOpen < 2) 1 else toOpen - 1
+                screen += if (nClosedCases() <= 2) "This will be your last offer."
+                    else "If you don't accept the offer, you must open $n " + (if (n == 1) "box" else "boxes") + "."
+                screen += System.lineSeparator() + "Do you accept this offer?"
+
+                spoken = screen
+            }
         }
 
         enumDONDGameState.DONDCongratulate -> {
-            val heldOnToEnd = (DONDGlobals.roundNum > DONDGlobals.FinalRound)
-            val BoxMoney = DONDGlobals.Amount[DONDBoxesContents[DONDGlobals.intMyBox]!!]
-            val WonMoney = if (heldOnToEnd) BoxMoney else DONDGlobals.offerMoney
-            hostWords = stringResource(R.string.hostWord_Congrats1, WonMoney)
+            val heldOnToEnd = (nClosedCases() <= 2)
+            val BoxMoney = Amount[DONDBoxesContents[intMyBox]!!]
+            val WonMoney = if (heldOnToEnd) BoxMoney else offerMoney
+            with (hostWords) {
+                screen = stringResource(R.string.hostWord_Congrats1, WonMoney)
+                spoken = screen
+            }
 
             wordsCongrat = (
                     if (heldOnToEnd)
-                        String.format("Your last offer was %1$,d.", DONDGlobals.offerMoney)
+                        String.format("Your last offer was %1$,d.", offerMoney)
                     else
-                        String.format("Your Box %1\$d contains %2$,d.", DONDGlobals.intMyBox, BoxMoney)
+                        String.format("Your Box %1\$d contains %2$,d.", intMyBox, BoxMoney)
                     ) + System.lineSeparator() + String.format("Congratulations on winning %1$,d.", WonMoney) + System.lineSeparator()
-            val QualityOfDeal = WonMoney.toDouble() / (if (heldOnToEnd) DONDGlobals.offerMoney else BoxMoney)
+            val QualityOfDeal = WonMoney.toDouble() / (if (heldOnToEnd) offerMoney else BoxMoney)
             if (QualityOfDeal > 200) {
                 // incredible
                 wordsCongrat += stringResource(R.string.QualityOfDeal_incredible)
@@ -272,10 +350,10 @@ fun PlayDOND() {
                 DONDBoxesVisiblity = DONDBoxesVisiblity.toMap(),
                 hostWords = hostWords,
                 onBoxOpen = { n ->
-                    DONDGlobals.lastBoxOpened = n
+                    lastBoxOpened = n
                     DONDBoxesVisiblity[n] = false
-                    if (DONDGlobals.intMyBox == 0) {  // beginning of game; MyBox has not yet been chosen
-                        DONDGlobals.intMyBox = n
+                    if (intMyBox == 0) {  // beginning of game; MyBox has not yet been chosen
+                        intMyBox = n
                     }
                     DONDGameState = enumDONDGameState.DONDStartNewRound
                 },
@@ -306,14 +384,14 @@ fun PlayDOND() {
                     }
                 },
                 onBoxOpen = { n ->
-                    DONDGlobals.lastBoxOpened = n
+                    lastBoxOpened = n
                     DONDBoxesVisiblity[n] = false
-                    if (DONDGlobals.intMyBox == 0) {  // beginning of game; MyBox has not yet been chosen
+                    if (intMyBox == 0) {  // beginning of game; MyBox has not yet been chosen
                         /* in this state, this branch should not be true */
-                        DONDGlobals.intMyBox = n
+                        intMyBox = n
                         DONDGameState = enumDONDGameState.DONDStartNewRound
                     } else {
-                        DONDGlobals.boxesOpened++
+                        boxesOpened++
                         amountAvail[DONDBoxesContents[n]!!] = false
                         afterAmountState = enumDONDGameState.DONDChooseNextBox
                         AmountListPeekedOnly = false
@@ -325,14 +403,15 @@ fun PlayDOND() {
         }
         enumDONDGameState.DONDPrepareForOffer -> {
             DONDScreens.TimeForOffer(
-                hostWords = hostWords
+                showWords = hostWords.screen,
+                sayWords = hostWords.spoken // stringResource(id = R.string.hostWord_TimeForOffer)
             ) {
                 DONDGameState = enumDONDGameState.DONDMakeOffer
             }
         }
         enumDONDGameState.DONDMakeOffer -> {
             DONDScreens.OfferScreen(
-                theOffer = hostWords,
+                theOffer = hostWords.screen,
                 playerAnswer = {
                     offerAccepted = it
                     DONDGameState = if (offerAccepted) enumDONDGameState.DONDCongratulate else enumDONDGameState.DONDStartNewRound
@@ -354,9 +433,9 @@ fun PlayDOND() {
                     }
                 },
                 onBoxOpen = { n ->
-                    DONDGlobals.lastBoxOpened = n
+                    lastBoxOpened = n
                     DONDBoxesVisiblity[n] = false
-                    DONDGlobals.boxesOpened++
+                    boxesOpened++
                     amountAvail[DONDBoxesContents[n]!!] = false
                     afterAmountState = enumDONDGameState.DONDChooseNextBox
                     AmountListPeekedOnly = false
@@ -365,10 +444,10 @@ fun PlayDOND() {
             )
         }
         enumDONDGameState.DONDShowAmountsLeft -> {
-            val nBox = DONDGlobals.lastBoxOpened
+            val nBox = lastBoxOpened
             DONDScreens.MoneyListScreen(
                 hostWords = hostWords,
-                AmountOpened = if (nBox != 0 && nBox != DONDGlobals.intMyBox) DONDBoxesContents[DONDGlobals.lastBoxOpened]!! else 0,
+                AmountOpened = if (nBox != 0 && nBox != intMyBox) DONDBoxesContents[lastBoxOpened]!! else 0,
                 amountAvail = amountAvail.toMap(),
                 onOKClick = {
                     DONDGameState = afterAmountState
@@ -399,28 +478,29 @@ fun PlayDOND() {
 
 // @Composable
 fun LoadBoxes(DONDBoxesContents:MutableMap<Int,Int>) {
-    // this var is simply a shortcut, but it's used is several places
-    val nBoxes = DONDGlobals.nBoxes
     val NUM_SHUFFLES = 1000
+
     for (n in 1..nBoxes) {
         DONDBoxesContents[n] = n
     }
+    tmpCheatBox = nBoxes
+
     for (n in 1..NUM_SHUFFLES) {
         var p1: Int
         var p2: Int
         @Suppress("JoinDeclarationAndAssignment") var tmp: Int  // cannot be assigned here - p1, p2 must have values first
         do {
-            p1 = DONDGlobals.RandLong(1, nBoxes)
-            p2 = DONDGlobals.RandLong(1, nBoxes)
+            p1 = Random.nextInt(1, nBoxes+1)
+            p2 = Random.nextInt(1, nBoxes+1)
         } while (p1 == p2)
         tmp = DONDBoxesContents[p1]!!
         DONDBoxesContents[p1] = DONDBoxesContents[p2]!!
         DONDBoxesContents[p2] = tmp
         if (DONDBoxesContents[p1]!! == nBoxes) {
-            DONDGlobals.tmpCheatBox = p1
+            tmpCheatBox = p1
         }
         if (DONDBoxesContents[p2]!! == nBoxes) {
-            DONDGlobals.tmpCheatBox = p2
+            tmpCheatBox = p2
         }
     }
 }
@@ -433,10 +513,9 @@ private fun CalculateOffer(
     var Divider = 0.0
     var Pct: Double
     val generosityFactor = 1.15
-    val nBoxes = DONDGlobals.nBoxes
     for (n in 1..nBoxes) {
         if (amountAvail[n]!!) {
-            TotalMoney += DONDGlobals.Amount[n].toDouble()
+            TotalMoney += Amount[n].toDouble()
             Divider += 1.0
             if (n <= 5) {
                 Divider += .25
@@ -455,9 +534,9 @@ private fun CalculateOffer(
         Divider = 0.75
     }
     do {
-        Pct = DONDGlobals.offerMinPct + Math.random() * generosityFactor * (DONDGlobals.offerMaxPct - DONDGlobals.offerMinPct)
-    } while (DONDGlobals.offerMinPct > Pct || DONDGlobals.offerMaxPct < Pct)
-    DONDGlobals.offerMoney = (TotalMoney * Pct / Divider).toLong()
-    return DONDGlobals.offerMoney
+        Pct = offerMinPct + Math.random() * generosityFactor * (offerMaxPct - offerMinPct)
+    } while (offerMinPct > Pct || offerMaxPct < Pct)
+    offerMoney = (TotalMoney * Pct / Divider).toLong()
+    return offerMoney
 }
 
