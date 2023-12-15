@@ -1,6 +1,7 @@
 package com.calvinc.dond5
 
 import android.speech.tts.TextToSpeech
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -10,11 +11,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
@@ -53,6 +57,7 @@ object DONDScreens {
     private const val AmountFontSize = 20
     private val AmountAvailColor = Color.Green
     private val AmountNotAvailColor = Color.Gray
+    private val buttonFontSize = 18
 
     /************************************
      * ANIMATION ("glow") CLASSES, etc
@@ -150,7 +155,7 @@ object DONDScreens {
     @Composable
     fun MainScreen(
         @Suppress("LocalVariableName") DONDBoxesVisiblity:Map<Int,Boolean>,
-        hostWords:hostWords, congrats:String = "",
+        hostWords:hostWords, congrats:String = "", beSilent: Boolean = false,
         onBoxOpen: (n:Int) -> Unit,
         miscfunctions: (f:String) -> Unit,
         @Suppress("LocalVariableName") DONDBoxesContents:Map<Int,Int> = mapOf()
@@ -174,7 +179,7 @@ object DONDScreens {
                 text = hostWords.screen,
                 fontSize = hostWordFontSize.sp
             )
-            DONDUtter(hostWords.spoken,TextToSpeech.QUEUE_FLUSH)
+            if (!beSilent) { DONDUtter(hostWords.spoken,TextToSpeech.QUEUE_FLUSH) }
             Spacer(modifier = Modifier.height(12.dp))
             for (row in 1 until nBoxes step cpr) {
                 Row {
@@ -271,6 +276,22 @@ object DONDScreens {
                 modifier = Modifier.align(Alignment.End),
             ) {
                 Text(text = "Go Away!")
+            }
+            // force next button to Bottom
+            Spacer(modifier = Modifier.height(150.dp) )
+            Row() {
+                Button(
+                    onClick = { miscfunctions("feedback") },
+                    // modifier = Modifier.align((Alignment.CenterHorizontally)),
+                ) {
+                    Text("feedback")
+                }
+                Button(
+                    onClick = { miscfunctions("rules") },
+                    // modifier = Modifier.align((Alignment.CenterHorizontally)),
+                ) {
+                    Text("How to Play")
+                }
             }
         }
     }
@@ -522,7 +543,6 @@ object DONDScreens {
         sayWords:String,
         msgAcknowleged: () -> Unit
     ) {
-        val buttonFontSize = 18
         AlertDialog(
             onDismissRequest = msgAcknowleged,
             confirmButton = {
@@ -543,6 +563,36 @@ object DONDScreens {
                 dismissOnClickOutside = false
             )
         )
+    }
+
+    @OptIn(ExperimentalFoundationApi::class)
+    @Composable
+    fun HowToPlay(
+        goback: () -> Unit
+    ) {
+        // Display 10 items
+        val pagerState = rememberPagerState(pageCount = { 10 })
+        Column(modifier = Modifier.fillMaxSize()) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(0.7f)
+            ) { page ->
+                // Our page content
+                when (page) {
+                    1 -> {}
+                    2 -> {}
+                    else -> {}
+                }
+                Text(
+                    text = "Page: $page",
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+            Button(onClick = goback) {
+                Text("Go Back To Game!", fontSize = buttonFontSize.sp)
+            }
+        }
     }
 }
 

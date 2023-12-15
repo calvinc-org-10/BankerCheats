@@ -1,8 +1,12 @@
 package com.calvinc.dond5
 
+import android.content.Context
+import android.content.Intent
 import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -51,6 +55,7 @@ class MainActivity : ComponentActivity() {
 
         startTTS()
         fnfinish = this::finish
+        mainContext = applicationContext
 
         setContent {
             BankerCheatsTheme {
@@ -106,6 +111,7 @@ class MainActivity : ComponentActivity() {
     }
     companion object {
         lateinit var fnfinish: () -> Unit
+        lateinit var mainContext: Context
     }
 
     /* temp code for printing out the voice set
@@ -129,6 +135,7 @@ fun PlayDOND() {
     */
     var DONDGameState:enumDONDGameState by remember { mutableStateOf(enumDONDGameState.DONDInit) }
     var afterAmountState: enumDONDGameState by remember { mutableStateOf(enumDONDGameState.DONDChooseNextBox) }
+    var afterHowToPlayState: enumDONDGameState by remember { mutableStateOf(enumDONDGameState.DONDChooseNextBox) }
     val DONDBoxesVisiblity= remember { mutableStateMapOf<Int,Boolean>()  }
     val DONDBoxesContents= remember { mutableStateMapOf<Int,Int>()  }
     val amountAvail = remember { mutableStateMapOf<Int,Boolean>() }
@@ -333,6 +340,9 @@ fun PlayDOND() {
                 wordsCongrat += stringResource(R.string.QualityOfDeal_notgood)
             }
         }
+
+        enumDONDGameState.DONDShowRules -> {}
+
         enumDONDGameState.DONDGetUserEndgameDecision -> {}
         enumDONDGameState.DONDEndGame -> {}
 
@@ -365,6 +375,8 @@ fun PlayDOND() {
                             AmountListPeekedOnly = true
                             DONDGameState = enumDONDGameState.DONDShowAmountsLeft
                         }
+                        "rules" -> {}
+                        "feedback" -> {}
                     }
                 }
             )
@@ -381,6 +393,8 @@ fun PlayDOND() {
                             AmountListPeekedOnly = true
                             DONDGameState = enumDONDGameState.DONDShowAmountsLeft
                         }
+                        "rules" -> {}
+                        "feedback" -> {}
                     }
                 },
                 onBoxOpen = { n ->
@@ -430,6 +444,13 @@ fun PlayDOND() {
                             AmountListPeekedOnly = true
                             DONDGameState = enumDONDGameState.DONDShowAmountsLeft
                         }
+                        "rules" -> {
+                            afterHowToPlayState = DONDGameState
+                            DONDGameState = enumDONDGameState.DONDShowRules
+                        }
+                        "feedback" -> {
+                            SendFeedback()
+                        }
                     }
                 },
                 onBoxOpen = { n ->
@@ -463,6 +484,8 @@ fun PlayDOND() {
                     when (it) {
                         "stop" -> DONDGameState = enumDONDGameState.DONDEndGame
                         "again" -> DONDGameState = enumDONDGameState.DONDActivateGame
+                        "rules" -> {}
+                        "feedback" -> {}
                     }
                 },
                 onBoxOpen = { },    // intentionally empty - clicking a box should do nothing
@@ -470,9 +493,47 @@ fun PlayDOND() {
             )
 
         }
+
+        enumDONDGameState.DONDShowRules -> {
+            DONDScreens.HowToPlay() {
+                DONDGameState = afterHowToPlayState
+            }
+        }
+
         enumDONDGameState.DONDGetUserEndgameDecision -> {}
         enumDONDGameState.DONDEndGame -> {  MainActivity.fnfinish() }
 
+    }
+}
+
+fun SendFeedback() {
+    val emailIntent = Intent(Intent.ACTION_SEND)
+    // emailIntent.setType("text/plain")
+    emailIntent.setType("message/rfc822")
+    emailIntent.putExtra(Intent.EXTRA_EMAIL, arrayOf("calvinc404@gmail.com"))
+    emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Email subject")
+    emailIntent.putExtra(Intent.EXTRA_TEXT, "Email message text")
+    val packageManager = MainActivity.mainContext.packageManager
+    val activities = packageManager.queryIntentActivities(emailIntent, 0)
+    val isIntentSafe = activities.size > 0
+    if (isIntentSafe) {
+        MainActivity.mainContext.startActivity(emailIntent)
+    }else{
+        Log.d("MainActivty","Email App not installed")
+    }
+}
+fun composeEmail(recipient: String, subject: String, body: String) {
+    val selectorIntent = Intent(Intent.ACTION_SENDTO).apply{
+        data = Uri.parse("mailto:") // only email apps should handle this
+    }
+    val emailIntent = Intent(Intent.ACTION_SEND).apply {
+        putExtra(Intent.EXTRA_EMAIL, arrayOf(recipient))
+        putExtra(Intent.EXTRA_SUBJECT, subject)
+        putExtra(Intent.EXTRA_TEXT, body)
+        selector = selectorIntent
+    }
+    if (emailIntent.resolveActivity(MainActivity.mainContext.packageManager) != null) {
+        MainActivity.mainContext.startActivity(emailIntent)
     }
 }
 
