@@ -31,3 +31,4 @@ replay_pid*
 
 *.bin
 *.lock
+/Galaxy-S22-Ultra-API-34-Android-14_2023-12-14_222426.logcat

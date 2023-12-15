@@ -174,111 +174,117 @@ object DONDScreens {
             horizontalAlignment = Alignment.CenterHorizontally
         )
         {
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = hostWords.screen,
-                fontSize = hostWordFontSize.sp
-            )
-            if (!beSilent) { DONDUtter(hostWords.spoken,TextToSpeech.QUEUE_FLUSH) }
-            Spacer(modifier = Modifier.height(12.dp))
-            for (row in 1 until nBoxes step cpr) {
-                Row {
-                    for (col in 0..4) {
-                        Button(
-                            onClick = { onBoxOpen(row + col) },
-                            modifier = Modifier.size(boxWid.dp),
-                            contentPadding = PaddingValues(
-                                start = 4.dp,
-                                top = 4.dp,
-                                end = 4.dp,
-                                bottom = 4.dp
-                            ),
-                            enabled = DONDBoxesVisiblity[row + col]!!,
-                        )
-                        {
-                            Column {
-                                Text(
-                                    (row + col).toString(),
-                                    fontSize = (boxWid/4).sp
-                                )
-                                if (endGameReveal && DONDBoxesVisiblity[row + col]!!) {
+            // Column to hold "top/main" part of screen
+            Column (
+                modifier = Modifier.fillMaxWidth().weight(1f)
+            ) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = hostWords.screen,
+                    fontSize = hostWordFontSize.sp
+                )
+                if (!beSilent) {
+                    DONDUtter(hostWords.spoken, TextToSpeech.QUEUE_FLUSH)
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                for (row in 1 until nBoxes step cpr) {
+                    Row {
+                        for (col in 0..4) {
+                            Button(
+                                onClick = { onBoxOpen(row + col) },
+                                modifier = Modifier.size(boxWid.dp),
+                                contentPadding = PaddingValues(
+                                    start = 4.dp,
+                                    top = 4.dp,
+                                    end = 4.dp,
+                                    bottom = 4.dp
+                                ),
+                                enabled = DONDBoxesVisiblity[row + col]!!,
+                            )
+                            {
+                                Column {
                                     Text(
-                                        String.format(
-                                            "%1$,d",
-                                            Amount[DONDBoxesContents[row+col]!!]
-                                        ),
-                                        fontSize = (boxWid/6).sp
+                                        (row + col).toString(),
+                                        fontSize = (boxWid / 4).sp
                                     )
+                                    if (endGameReveal && DONDBoxesVisiblity[row + col]!!) {
+                                        Text(
+                                            String.format(
+                                                "%1$,d",
+                                                Amount[DONDBoxesContents[row + col]!!]
+                                            ),
+                                            fontSize = (boxWid / 6).sp
+                                        )
+                                    }
                                 }
                             }
                         }
+                        Spacer(modifier = Modifier.height(6.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.height((12.dp)))
+                Row(
+                    horizontalArrangement = Arrangement.Start,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    if (intMyBox != 0) {
+                        Column(horizontalAlignment = Alignment.Start) {
+                            Text(
+                                text = stringResource(id = R.string.DONDYourBoxIs),
+                                modifier = Modifier.padding(start = 4.dp)
+                            )
+                            Text(
+                                modifier = Modifier.padding(start = 24.dp),
+                                text = intMyBox.toString(),
+                                fontSize = 24.sp
+                            )
+                        }
+                    }
+                    if (congrats != "") {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.End
+                        ) {
+                            DONDUtter(congrats)
+                            Text(
+                                text = congrats,
+                                fontSize = hostWordFontSize.sp,
+                                textAlign = TextAlign.End
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                if (!endGameReveal) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Button(
+                            onClick = { miscfunctions("amounts") },
+                        ) {
+                            Text(text = "Show Amounts")
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+                if (endGameReveal) {
+                    Button(
+                        onClick = { miscfunctions("again") },
+                        modifier = Modifier.align(Alignment.End),
+                    ) {
+                        Text(text = "Play Again")
                     }
                     Spacer(modifier = Modifier.height(6.dp))
                 }
-            }
-            Spacer(modifier = Modifier.height((12.dp)))
-            Row(
-                horizontalArrangement = Arrangement.Start,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                if (intMyBox != 0) {
-                    Column(horizontalAlignment = Alignment.Start) {
-                        Text(
-                            text = stringResource(id = R.string.DONDYourBoxIs),
-                            modifier = Modifier.padding(start = 4.dp)
-                        )
-                        Text(
-                            modifier = Modifier.padding(start = 24.dp),
-                            text = intMyBox.toString(),
-                            fontSize = 24.sp
-                        )
-                    }
-                }
-                if (congrats != "") {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.End
-                    ) {
-                        DONDUtter(congrats)
-                        Text(
-                            text = congrats,
-                            fontSize = hostWordFontSize.sp,
-                            textAlign = TextAlign.End
-                        )
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            if (!endGameReveal) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Button(
-                        onClick = { miscfunctions("amounts") },
-                    ) {
-                        Text(text = "Show Amounts")
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-            if (endGameReveal) {
                 Button(
-                    onClick = { miscfunctions("again") },
+                    onClick = { miscfunctions("stop") },
                     modifier = Modifier.align(Alignment.End),
                 ) {
-                    Text(text = "Play Again")
+                    Text(text = "Go Away!")
                 }
-                Spacer(modifier = Modifier.height(6.dp))
             }
-            Button(
-                onClick = { miscfunctions("stop") },
-                modifier = Modifier.align(Alignment.End),
-            ) {
-                Text(text = "Go Away!")
-            }
-            // force next button to Bottom
-            Spacer(modifier = Modifier.height(150.dp) )
+            // row at "bottom" of screen - forced there because Column above has weight(1f)
             Row() {
                 Button(
                     onClick = { miscfunctions("feedback") },
