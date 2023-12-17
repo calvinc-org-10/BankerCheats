@@ -1,0 +1,10 @@
+25 distinct Amounts from 1 to 1000000 are randomly placed in 25 Boxes, and the Boxes are sealed.
+
+At the beginning of the game, you will choose a Box.  This will be your Box through the entire game.  This Box will remain sealed until you either take an offer from the Banker or refuse all of the Banker's offers through the end.  If you play the game through to the end and refuse all of the Banker's offers, your Box will be opened and you will win the Amount in Your Box.
+
+After you choose Your Box, you then open 6 Boxes, one at a time.  As each Box is opened, it's Amount is revealed, and you (and the Banker) knows that that Amount is not in Your Box.
+Once you open 6 Boxes, the Banker will make you an offer.  The Banker's offer will depend on the Amounts in the Boxes you've opened. The offer increases if lower values are eliminated and decreases if upper values are eliminated.
+If you accept the Banker's offer, Your Box is opened and you can see if the offer (which is what you've won) is more or less than what's in Your Box (which is what you would have won if you ad refused offers until the end).
+If you refuse the Banker's offer, this process continues, except you must open 5 (then 4, then 3, then 2, then 1) Boxes until the Banker's next offer.
+
+When there is just one Box left in addition to Your Box, the Banker will make his final offer.  If you refuse the final offer, you will win whatever is in Your Box.

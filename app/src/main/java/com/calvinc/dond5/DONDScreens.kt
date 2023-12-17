@@ -1,6 +1,7 @@
 package com.calvinc.dond5
 
 import android.speech.tts.TextToSpeech
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -176,11 +177,15 @@ object DONDScreens {
         {
             // Column to hold "top/main" part of screen
             Column (
-                modifier = Modifier.fillMaxWidth().weight(1f)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
             ) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
+                    modifier = Modifier.fillMaxWidth(),
                     text = hostWords.screen,
+                    textAlign = TextAlign.Center,
                     fontSize = hostWordFontSize.sp
                 )
                 if (!beSilent) {
@@ -305,8 +310,8 @@ object DONDScreens {
     // @OptIn(ExperimentalTransitionApi::class)
     @Composable
     fun MoneyListScreen(
-        hostWords:hostWords,
-        AmountOpened:Int = 0,
+        hostWords:hostWords, beSilent: Boolean = false,
+        BoxOpened:Int = 0,
         showOnly:Boolean = false,
         amountAvail:Map<Int,Boolean>,
         onOKClick: () -> Unit,
@@ -314,17 +319,17 @@ object DONDScreens {
         val passRange = if (showOnly) 0..0 else 1..2
         for (pass in passRange) {
             MoneyListScreen_actual(
-                hostWords = hostWords,
+                hostWords = hostWords, beSilent = beSilent && (pass==passRange.last),
                 amountAvail = amountAvail,
-                AmountOpened = AmountOpened,
+                BoxOpened = BoxOpened,
                 onOKClick = onOKClick,
                 passBoxOpen = pass,
                 )
         }
     }
     @Composable  fun MoneyListScreen_actual(
-        hostWords:hostWords,
-        AmountOpened:Int = 0,
+        hostWords:hostWords, beSilent: Boolean = false,
+        BoxOpened:Int = 0,
         passBoxOpen: Int = 0,
         amountAvail:Map<Int,Boolean>,
         onOKClick: () -> Unit,
@@ -336,6 +341,7 @@ object DONDScreens {
         val boxWid = (scrWid * .45).toInt()
         val boxWid_last = scrWid/2
         val boxHgt = (scrHgt - (hostWordFontSize*2-2+12) + (12+20) - 200)/((nBoxes +1)/2)  // if you ask nicely, I'll lovingly explain this formula to you
+        var alreadySpoken by remember { mutableStateOf(false) }
 
         //TODO: See https://developer.android.com/jetpack/compose/layouts/custom to figure out how to implement this
         @Suppress("unused")
@@ -343,7 +349,7 @@ object DONDScreens {
             val avail = amountAvail[btnNum]!!
             val fontSz = AmountFontSize
             var openAmountColor = (if (avail) AmountAvailColor else AmountNotAvailColor)
-            if (btnNum == AmountOpened) {
+            if (btnNum == BoxOpened) {
                 when (passBoxOpen) {
                     1 -> { openAmountColor = AmountAvailColor }
                     2 -> { openAmountColor = AmountNotAvailColor }
@@ -372,7 +378,10 @@ object DONDScreens {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // DONDUtter(hostWords) - nope - this phrase is repeated on MainScreen
+            if (!beSilent && !alreadySpoken) {
+                DONDUtter(hostWords.spoken)
+                alreadySpoken = true
+            }
             Text(
                 text = hostWords.screen,
                 modifier = Modifier.fillMaxWidth(),
@@ -402,7 +411,7 @@ object DONDScreens {
                     var avail = amountAvail[p1]!!
                     var fontSz = AmountFontSize
                     var openAmountColor = (if (avail) AmountAvailColor else AmountNotAvailColor)
-                    if (btnNum == AmountOpened) {
+                    if (btnNum == BoxOpened) {
                         when (passBoxOpen) {
                             1 -> { openAmountColor = AmountAvailColor }
                             2 -> { openAmountColor = AmountNotAvailColor }
@@ -426,7 +435,7 @@ object DONDScreens {
                     avail = amountAvail[p2]!!
                     fontSz = AmountFontSize
                     openAmountColor = (if (avail) AmountAvailColor else AmountNotAvailColor)
-                    if (btnNum == AmountOpened) {
+                    if (btnNum == BoxOpened) {
                         when (passBoxOpen) {
                             1 -> { openAmountColor = AmountAvailColor }
                             2 -> { openAmountColor = AmountNotAvailColor }
@@ -460,7 +469,7 @@ object DONDScreens {
                     val avail = amountAvail[p]!!
                     val fontSz = AmountFontSize
                     var openAmountColor = (if (avail) AmountAvailColor else AmountNotAvailColor)
-                    if (btnNum == AmountOpened) {
+                    if (btnNum == BoxOpened) {
                         when (passBoxOpen) {
                             1 -> { openAmountColor = AmountAvailColor }
                             2 -> { openAmountColor = AmountNotAvailColor }
@@ -576,25 +585,37 @@ object DONDScreens {
     fun HowToPlay(
         goback: () -> Unit
     ) {
-        // Display 10 items
-        val pagerState = rememberPagerState(pageCount = { 10 })
+        val pagerState = rememberPagerState(pageCount = { 4 })
+        BackHandler { goback() }
         Column(modifier = Modifier.fillMaxSize()) {
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.weight(0.7f)
             ) { page ->
                 // Our page content
-                when (page) {
-                    1 -> {}
-                    2 -> {}
-                    else -> {}
-                }
-                Text(
-                    text = "Page: $page",
-                    modifier = Modifier.fillMaxWidth()
+                Text(modifier = Modifier.fillMaxWidth(),
+                    fontFamily = FontFamily.SansSerif,
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    text =
+                    when (page) {
+                        0 -> "The Banker Will Cheat You Now"
+                        1 -> "25 distinct Amounts from 1 to 1000000 are randomly placed in 25 Boxes, and the Boxes are sealed.\n" +
+                                "\n" +
+                                "At the beginning of the game, you will choose a Box.  This will be your Box through the entire game.  This Box will remain sealed until you either take an offer from the Banker or refuse all of the Banker's offers through the end.  If you play the game through to the end and refuse all of the Banker's offers, your Box will be opened and you will win the Amount in Your Box.\n"
+                        2 -> "After you choose Your Box, you then open 6 Boxes, one at a time.  As each Box is opened, it's Amount is revealed, and you (and the Banker) knows that that Amount is not in Your Box.\n" +
+                                "\n" +
+                                "Once you open 6 Boxes, the Banker will make you an offer.  The Banker's offer will depend on the Amounts in the Boxes you've opened. The offer increases if lower values are eliminated and decreases if upper values are eliminated.\n" +
+                                "\n" +
+                                "If you accept the Banker's offer, Your Box is opened and you can see if the offer (which is what you've won) is more or less than what's in Your Box (which is what you would have won if you ad refused offers until the end).\n" +
+                                "\n" +
+                                "If you refuse the Banker's offer, this process continues, except you must open 5 (then 4, then 3, then 2, then 1) Boxes until the Banker's next offer.\n"
+                        3 -> "When there is just one Box left in addition to Your Box, the Banker will make his final offer.  If you refuse the final offer, you will win whatever is in Your Box.\n"
+                        else -> ""
+                    }
                 )
             }
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Button(onClick = goback) {
                 Text("Go Back To Game!", fontSize = buttonFontSize.sp)
             }

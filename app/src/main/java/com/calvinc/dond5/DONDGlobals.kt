@@ -31,8 +31,8 @@ object DONDGlobals {
     var CalvinCheat = false
     var tmpCheatBox: Int = 0
 
-    const val ouchwordProbability = 0.40f
-    val ouchWords = listOf("ouch!", "oooh,","oh wow!", "Oh!", "ooh, that hurts!",)
+    const val ouchwordProbability = 0.45f
+    val ouchWords = listOf("ouch!! ", "oooh! ","oh wow!! ", "Oh!! ", "ooh, that hurts!! ",)
     val moneyinplayWords = listOf("still in play")
 
     @JvmField

@@ -1,2 +1,3 @@
 TODO: Have Back button from support screens (HowToPlay, Feedback, etc) return to prev screen
-TODO: Test if t-d- file works
+    HowToPlay handled - put in Feedback
+DONE: Test if t-d- file works. It does.

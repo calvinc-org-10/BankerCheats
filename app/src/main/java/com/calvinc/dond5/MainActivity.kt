@@ -25,7 +25,6 @@ import com.calvinc.dond5.DONDGlobals.CalvinCheat
 import com.calvinc.dond5.DONDGlobals.DONDTTSInstance
 import com.calvinc.dond5.DONDGlobals.absOfferMaxPct
 import com.calvinc.dond5.DONDGlobals.absOfferMinPct
-import com.calvinc.dond5.DONDGlobals.bigMoneyMinimum
 import com.calvinc.dond5.DONDGlobals.boxesOpened
 import com.calvinc.dond5.DONDGlobals.intMyBox
 import com.calvinc.dond5.DONDGlobals.lastBoxOpened
@@ -35,8 +34,6 @@ import com.calvinc.dond5.DONDGlobals.offerMaxPctDelta
 import com.calvinc.dond5.DONDGlobals.offerMinPct
 import com.calvinc.dond5.DONDGlobals.offerMinPctDelta
 import com.calvinc.dond5.DONDGlobals.offerMoney
-import com.calvinc.dond5.DONDGlobals.ouchWords
-import com.calvinc.dond5.DONDGlobals.ouchwordProbability
 import com.calvinc.dond5.DONDGlobals.roundNum
 import com.calvinc.dond5.DONDGlobals.tmpCheatBox
 import com.calvinc.dond5.DONDGlobals.toOpen
@@ -47,6 +44,9 @@ import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
     // val SPLASH_DELAY: Long = 5000
+    val DONDFeedbackEmail = "calvinc404@gmail.com"
+    val DONDFeedbackSubject = "Feedback - BankerCheats"
+    val DONDFeedbackMailBody = "\"The Banker Will Cheat You Now\" is Awesome!!"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -262,11 +262,6 @@ class MainActivity : ComponentActivity() {
                         ""
 
                     spoken = ""
-                    if (!AmountListPeekedOnly)
-                        if (moneyInBox >= bigMoneyMinimum)
-                            if (Random.nextFloat() <= (ouchwordProbability + (0.6f * moneyInBox) / (Amount[nBoxes] - bigMoneyMinimum)))
-                                spoken = ouchWords[Random.nextInt(ouchWords.size)]
-                    spoken += screen
                 }
 
                 if (boxesOpened >= toOpen) {
@@ -285,14 +280,23 @@ class MainActivity : ComponentActivity() {
             enumDONDGameState.DONDShowAmountsLeft -> {
                 val nBox = lastBoxOpened
                 with(hostWords) {
+                    val moneyInBox =
+                        if (nBox != 0 && nBox != intMyBox) Amount[DONDBoxesContents[nBox]!!] else 0
                     screen = if (nBox != 0 && !AmountListPeekedOnly)
                         String.format(
                             stringResource(R.string.hostWord_BoxContains),
                             nBox,
-                            Amount[DONDBoxesContents[nBox]!!]
+                            moneyInBox
                         )
                     else
                         ""
+
+                    spoken = ""
+                    if (!AmountListPeekedOnly)
+                        if (moneyInBox >= DONDGlobals.bigMoneyMinimum)
+                            if (Random.nextFloat() <= (DONDGlobals.ouchwordProbability + (0.6f * moneyInBox) / (Amount[nBoxes] - DONDGlobals.bigMoneyMinimum)))
+                                spoken = DONDGlobals.ouchWords[Random.nextInt(DONDGlobals.ouchWords.size)]
+                    spoken += screen
                 }
             }
 
@@ -385,8 +389,11 @@ class MainActivity : ComponentActivity() {
                                 DONDGameState = enumDONDGameState.DONDShowAmountsLeft
                             }
 
-                            "rules" -> {}
-                            "feedback" -> {}
+                            "rules" -> {
+                                afterHowToPlayState = DONDGameState
+                                DONDGameState = enumDONDGameState.DONDShowRules
+                            }
+                            "feedback" -> { sendDONDFeedback() }
                         }
                     }
                 )
@@ -405,8 +412,11 @@ class MainActivity : ComponentActivity() {
                                 DONDGameState = enumDONDGameState.DONDShowAmountsLeft
                             }
 
-                            "rules" -> {}
-                            "feedback" -> {}
+                            "rules" -> {
+                                afterHowToPlayState = DONDGameState
+                                DONDGameState = enumDONDGameState.DONDShowRules
+                            }
+                            "feedback" -> { sendDONDFeedback() }
                         }
                     },
                     onBoxOpen = { n ->
@@ -466,9 +476,7 @@ class MainActivity : ComponentActivity() {
                                 DONDGameState = enumDONDGameState.DONDShowRules
                             }
 
-                            "feedback" -> {
-                                composeEmail("calvinc444@gmail.com", "test subject", "test body")
-                            }
+                            "feedback" -> { sendDONDFeedback() }
                         }
                     },
                     onBoxOpen = { n ->
@@ -487,7 +495,7 @@ class MainActivity : ComponentActivity() {
                 val nBox = lastBoxOpened
                 DONDScreens.MoneyListScreen(
                     hostWords = hostWords,
-                    AmountOpened = if (nBox != 0 && nBox != intMyBox) DONDBoxesContents[lastBoxOpened]!! else 0,
+                    BoxOpened = if (nBox != intMyBox) nBox else 0,
                     amountAvail = amountAvail.toMap(),
                     onOKClick = {
                         DONDGameState = afterAmountState
@@ -504,8 +512,11 @@ class MainActivity : ComponentActivity() {
                         when (it) {
                             "stop" -> DONDGameState = enumDONDGameState.DONDEndGame
                             "again" -> DONDGameState = enumDONDGameState.DONDActivateGame
-                            "rules" -> {}
-                            "feedback" -> {}
+                            "rules" -> {
+                                afterHowToPlayState = DONDGameState
+                                DONDGameState = enumDONDGameState.DONDShowRules
+                            }
+                            "feedback" -> { sendDONDFeedback() }
                         }
                     },
                     onBoxOpen = { },    // intentionally empty - clicking a box should do nothing
@@ -528,6 +539,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    fun sendDONDFeedback() {
+        composeEmail(DONDFeedbackEmail, DONDFeedbackSubject, DONDFeedbackMailBody)
+    }
     fun composeEmail(recipient: String, subject: String, body: String) {
         val selectorIntent = Intent(Intent.ACTION_SENDTO).apply {
             data = Uri.parse("mailto:") // only email apps should handle this
