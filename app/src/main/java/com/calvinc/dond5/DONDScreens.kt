@@ -244,6 +244,13 @@ object DONDScreens {
                                 text = intMyBox.toString(),
                                 fontSize = 24.sp
                             )
+                            if (endGameReveal) {
+                                Text(
+                                    modifier = Modifier.padding(start = 24.dp),
+                                    text = String.format("%1$,d",Amount[DONDBoxesContents[intMyBox]!!]),
+                                    fontSize = (boxWid / 6).sp
+                                )
+                            }
                         }
                     }
                     if (congrats != "") {
@@ -311,6 +318,7 @@ object DONDScreens {
     // @OptIn(ExperimentalTransitionApi::class)
     @Composable
     fun MoneyListScreen(
+        DONDBoxesContents: Map<Int, Int>,   //TODO: Remove from final build - debugging only
         hostWords:hostDialogue, beSilent: Boolean = false,
         AmountOpened:Int = 0,
         showOnly:Boolean = false,
@@ -323,6 +331,7 @@ object DONDScreens {
 
         if (pass <= passRange.last) {
             MoneyListScreen_actual(
+                DONDBoxesContents,    //TODO: Remove from final build - debugging only
                 hostWords = hostWords, beSilent = beSilent || (pass != passRange.first),
                 amountAvail = amountAvail,
                 AmountOpened = AmountOpened,
@@ -337,6 +346,7 @@ object DONDScreens {
         }
     }
     @Composable  fun MoneyListScreen_actual(
+        DONDBoxesContents: Map<Int, Int>,   //TODO: Remove from final build - debugging only
         hostWords:hostDialogue, beSilent: Boolean = false,
         AmountOpened:Int = 0,
         passBoxOpen: Int = 0,
@@ -351,6 +361,10 @@ object DONDScreens {
         val boxWid_last = scrWid/2
         val boxHgt = (scrHgt - (hostWordFontSize*2-2+12) + (12+20) - 200)/((nBoxes +1)/2)  // if you ask nicely, I'll lovingly explain this formula to you
         var alreadySpoken by remember { mutableStateOf(false) }
+
+        //TODO: Remove this block from final build - debugging
+        var CheatMap = IntArray(26)
+        for ((box,amt) in DONDBoxesContents) CheatMap[amt] = box
 
         //TODO: See https://developer.android.com/jetpack/compose/layouts/custom to figure out how to implement this
         @Suppress("unused")
@@ -434,7 +448,7 @@ object DONDScreens {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = Amount[btnNum].toString(),
+                            text = Amount[btnNum].toString() + " / " + CheatMap[btnNum],
                             fontSize = fontSz.sp,
                             color = openAmountColor,
                         )
@@ -458,7 +472,7 @@ object DONDScreens {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = Amount[btnNum].toString(),
+                            text = Amount[btnNum].toString() + " / " + CheatMap[btnNum],
                             fontSize = fontSz.sp,
                             color = openAmountColor,
                         )
@@ -492,7 +506,7 @@ object DONDScreens {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = Amount[btnNum].toString(),
+                            text = Amount[btnNum].toString() + " / " + CheatMap[btnNum],
                             fontSize = fontSz.sp,
                             color = openAmountColor,
                         )
@@ -694,13 +708,16 @@ fun MoneyListScreenPreview() {
     val dummyContentsMap = mutableMapOf<Int,Int>()
     val dummyAvailMap = mutableMapOf<Int,Boolean>()
     val hostWords = hostDialogue(screen = "Boxes contain Money!!")
+    var CheatMap = mutableMapOf<Int, Int>()     //TODO: remove this in final build
     for (i in 1..nBoxes) {
         dummyVisibleMap[i] = true
         dummyContentsMap[i] = i
         dummyAvailMap[i] = true
+        CheatMap[i] = i
     }
     BankerCheatsTheme {
         DONDScreens.MoneyListScreen(
+            CheatMap,
             hostWords = hostWords,
             amountAvail = dummyAvailMap,
             onOKClick = { },

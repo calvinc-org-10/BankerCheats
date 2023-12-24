@@ -142,10 +142,10 @@ class MainActivity : ComponentActivity() {
         val DONDBoxesContents = remember { mutableStateMapOf<Int, Int>() }
         val amountAvail = remember { mutableStateMapOf<Int, Boolean>() }
         var AmountListPeekedOnly by remember { mutableStateOf(false) }
+        var offerAccepted by remember { mutableStateOf(false) }
 
         // var hostWords = ""
         var wordsCongrat = ""
-        var offerAccepted: Boolean
 
         @Suppress("unused")
         fun nClosedCases(): Int {
@@ -320,23 +320,23 @@ class MainActivity : ComponentActivity() {
             enumDONDGameState.DONDCongratulate -> {
                 val heldOnToEnd = (nClosedCases() <= 2)
                 val BoxMoney = Amount[DONDBoxesContents[intMyBox]!!]
-                val WonMoney = if (heldOnToEnd) BoxMoney else offerMoney
+                val WonMoney = if (heldOnToEnd && !offerAccepted) BoxMoney else offerMoney
                 with(hostWords) {
                     screen = stringResource(R.string.hostWord_Congrats1, WonMoney)
                     spoken = ""
                 }
 
                 wordsCongrat = (
-                        if (heldOnToEnd)
+                        if (heldOnToEnd && !offerAccepted)
                             String.format("Your last offer was %1$,d.", offerMoney)
                         else
                             String.format("Your Box %1\$d contains %2$,d.", intMyBox, BoxMoney)
-                        ) + System.lineSeparator() + String.format(
-                    "Congratulations on winning %1$,d.",
-                    WonMoney
-                ) + System.lineSeparator()
+                        ) +
+                        System.lineSeparator() +
+                        String.format("Congratulations on winning %1$,d.",WonMoney) +
+                        System.lineSeparator()
                 val QualityOfDeal =
-                    WonMoney.toDouble() / (if (heldOnToEnd) offerMoney else BoxMoney)
+                    WonMoney.toDouble() / (if (heldOnToEnd && !offerAccepted) offerMoney else BoxMoney)
                 if (QualityOfDeal > 200) {
                     // incredible
                     wordsCongrat += stringResource(R.string.QualityOfDeal_incredible)
@@ -490,6 +490,7 @@ class MainActivity : ComponentActivity() {
             enumDONDGameState.DONDShowAmountsLeft -> {
                 val nBox = lastBoxOpened
                 DONDScreens.MoneyListScreen(
+                    DONDBoxesContents,  //TODO: Remove in final build - for temp debugging only
                     hostWords = hostWords,
                     AmountOpened = if (nBox != intMyBox) DONDBoxesContents[nBox]!! else 0,
                     amountAvail = amountAvail.toMap(),
