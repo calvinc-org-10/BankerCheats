@@ -48,6 +48,8 @@ class MainActivity : ComponentActivity() {
     val DONDFeedbackSubject = "Feedback - BankerCheats"
     val DONDFeedbackMailBody = "\"The Banker Will Cheat You Now\" is Awesome!!"
 
+    var hostWords: hostDialogue = hostDialogue()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -186,7 +188,7 @@ class MainActivity : ComponentActivity() {
                 toOpen = toOpenStart + 1  // 1 added because 1 will be subtracted at start of round
                 boxesOpened = 0
                 val hostWords_Cheat =
-                    if (CalvinCheat) "Cheat: " + tmpCheatBox + System.lineSeparator() else ""
+                    if (CalvinCheat) "Cheat: " + tmpCheatBox + "." + System.lineSeparator() else ""
                 with(hostWords) {
                     screen = hostWords_Cheat + stringResource(id = R.string.hostWord_ChooseABox1)
                     spoken = screen
@@ -197,7 +199,7 @@ class MainActivity : ComponentActivity() {
 
             enumDONDGameState.DONDPickMyBox -> {
                 val hostWords_Cheat =
-                    if (CalvinCheat) "Cheat: " + tmpCheatBox + System.lineSeparator() else ""
+                    if (CalvinCheat) "Cheat: " + tmpCheatBox + "." + System.lineSeparator() else ""
                 with(hostWords) {
                     screen = hostWords_Cheat + stringResource(id = R.string.hostWord_ChooseABox1)
                     spoken = screen
@@ -307,9 +309,9 @@ class MainActivity : ComponentActivity() {
                         stringResource(R.string.presentOffer, CalculateOffer(amountAvail.toMap()))
                     screen += System.lineSeparator()
                     val n = if (toOpen < 2) 1 else toOpen - 1
-                    screen += if (nClosedCases() <= 2) "This will be your last offer."
-                    else "If you don't accept the offer, you must open $n " + (if (n == 1) "box" else "boxes") + "."
-                    screen += System.lineSeparator() + "Do you accept this offer?"
+                    screen += if (nClosedCases() <= 2) stringResource(id = R.string.hostWord_ThisIsLastOffer, intMyBox)
+                        else stringResource(id = R.string.hostWord_IfNoAcceptYouMustOpenBoxes_pt1, n) + (if (n == 1) "box" else "boxes") + "."
+                    screen += System.lineSeparator() + stringResource(id = R.string.hostWord_DoYouAcceptOffer)
 
                     spoken = screen
                 }
@@ -439,23 +441,17 @@ class MainActivity : ComponentActivity() {
             }
 
             enumDONDGameState.DONDPrepareForOffer -> {
-                DONDScreens.TimeForOffer(
-                    showWords = hostWords.screen,
-                    sayWords = hostWords.spoken // stringResource(id = R.string.hostWord_TimeForOffer)
-                ) {
+                DONDScreens.TimeForOffer( hostWords ) {
                     DONDGameState = enumDONDGameState.DONDMakeOffer
                 }
             }
 
             enumDONDGameState.DONDMakeOffer -> {
-                DONDScreens.OfferScreen(
-                    theOffer = hostWords.screen,
-                    playerAnswer = {
-                        offerAccepted = it
-                        DONDGameState =
-                            if (offerAccepted) enumDONDGameState.DONDCongratulate else enumDONDGameState.DONDStartNewRound
-                    }
-                )
+                DONDScreens.OfferScreen( hostWords ) {
+                    offerAccepted = it
+                    DONDGameState =
+                        if (offerAccepted) enumDONDGameState.DONDCongratulate else enumDONDGameState.DONDStartNewRound
+                }
             }
 
             enumDONDGameState.DONDChooseNextBox -> {
@@ -495,7 +491,7 @@ class MainActivity : ComponentActivity() {
                 val nBox = lastBoxOpened
                 DONDScreens.MoneyListScreen(
                     hostWords = hostWords,
-                    BoxOpened = if (nBox != intMyBox) nBox else 0,
+                    AmountOpened = if (nBox != intMyBox) DONDBoxesContents[nBox]!! else 0,
                     amountAvail = amountAvail.toMap(),
                     onOKClick = {
                         DONDGameState = afterAmountState

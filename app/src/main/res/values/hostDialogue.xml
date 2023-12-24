@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hostWord_ThisIsLastOffer">This will be your last offer.  If you don\'t take this offer, you will win whatever\'s in your box %1$,d.</string>
+    <string name="hostWord_ChooseABox1">Choose a Box. This will be your Box.</string>
+    <string name="hostWord_ChooseABox2">Choose a Box to open.</string>
+    <string name="hostWord_TimeForOffer">It\'s time for an offer!</string>
+    <string name="hostWord_TimeToOpen1Box">It\'s time to open a Box!</string>
+    <string name="hostWord_TimeToOpenBoxes">It\'s time to open %1$d Boxes!</string>
+    <string name="hostWord_OpenAnotherBox">Open another Box!</string>
+    <string name="hostWord_OpenAnotherBoxofN">You have %1$d more boxes to open.\nOpen another Box!</string>
+    <string name="hostWord_OpenOneMoreBox">Open one more Box, then the Banker will make you an offer!</string>
+    <string name="hostWord_OfferTaken">"Offer of %1$,d was taken."</string>
+    <string name="hostWord_OfferRefused">"Offer of %1$,d was refused."</string>
+    <string name="hostWord_BoxContains">Box %1d contains %2$,d.</string>
+    <string name="hostWord_Congrats1">Congratulations on winning %1$,d!</string>
+    <string name="hostWord_YouveChosenBox">"You've chosen box number %1d. "</string>
+
+    <string name="QualityOfDeal_incredible">You made an incredible deal!</string>
+    <string name="QualityOfDeal_awesome">You made an awesome deal!</string>
+    <string name="QualityOfDeal_great">You made a great deal!</string>
+    <string name="QualityOfDeal_good">You made a good deal!</string>
+    <string name="QualityOfDeal_notgood">Too bad that wasn\'t the deal you wanted.</string>
+
+    <string name="presentOffer">The Offer is %1$,d.</string>
+    <string name="hostWord_IfNoAcceptYouMustOpenBoxes_pt1">"If you don't accept the offer, you must open %1d "</string>
+    <string name="hostWord_DoYouAcceptOffer">Do you accept this offer?</string>
+</resources>
