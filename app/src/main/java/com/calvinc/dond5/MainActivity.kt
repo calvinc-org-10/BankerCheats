@@ -323,7 +323,7 @@ class MainActivity : ComponentActivity() {
                 val WonMoney = if (heldOnToEnd) BoxMoney else offerMoney
                 with(hostWords) {
                     screen = stringResource(R.string.hostWord_Congrats1, WonMoney)
-                    spoken = screen
+                    spoken = ""
                 }
 
                 wordsCongrat = (
@@ -415,7 +415,7 @@ class MainActivity : ComponentActivity() {
                             }
 
                             "rules" -> {
-                                afterHowToPlayState = DONDGameState
+                                afterHowToPlayState = enumDONDGameState.DONDChooseNextBox
                                 DONDGameState = enumDONDGameState.DONDShowRules
                             }
                             "feedback" -> { sendDONDFeedback() }
