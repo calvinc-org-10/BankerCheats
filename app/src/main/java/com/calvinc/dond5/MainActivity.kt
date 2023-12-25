@@ -44,11 +44,11 @@ import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
     // val SPLASH_DELAY: Long = 5000
-    val DONDFeedbackEmail = "calvinc404@gmail.com"
-    val DONDFeedbackSubject = "Feedback - BankerCheats"
-    val DONDFeedbackMailBody = "\"The Banker Will Cheat You Now\" is Awesome!!"
+    private val DONDFeedbackEmail = "calvinc404@gmail.com"
+    private val DONDFeedbackSubject = "Feedback - BankerCheats"
+    private val DONDFeedbackMailBody = "\"The Banker Will Cheat You Now\" is Awesome!!"
 
-    var hostWords: hostDialogue = hostDialogue()
+    private var hostWords: hostDialogue = hostDialogue()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -490,7 +490,7 @@ class MainActivity : ComponentActivity() {
             enumDONDGameState.DONDShowAmountsLeft -> {
                 val nBox = lastBoxOpened
                 DONDScreens.MoneyListScreen(
-                    DONDBoxesContents,  //TODO: Remove in final build - for temp debugging only
+                    // DONDBoxesContents,  //DONE: Remove in final build - for temp debugging only
                     hostWords = hostWords,
                     AmountOpened = if (nBox != intMyBox) DONDBoxesContents[nBox]!! else 0,
                     amountAvail = amountAvail.toMap(),
@@ -536,10 +536,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun sendDONDFeedback() {
+    private fun sendDONDFeedback() {
         composeEmail(DONDFeedbackEmail, DONDFeedbackSubject, DONDFeedbackMailBody)
     }
-    fun composeEmail(recipient: String, subject: String, body: String) {
+    @Suppress("SameParameterValue")
+    private fun composeEmail(recipient: String, subject: String, body: String) {
         val selectorIntent = Intent(Intent.ACTION_SENDTO).apply {
             data = Uri.parse("mailto:") // only email apps should handle this
         }
@@ -555,7 +556,7 @@ class MainActivity : ComponentActivity() {
     }
 
     // @Composable
-    fun LoadBoxes(DONDBoxesContents: MutableMap<Int, Int>) {
+    private fun LoadBoxes(DONDBoxesContents: MutableMap<Int, Int>) {
         val NUM_SHUFFLES = 1000
 
         for (n in 1..nBoxes) {

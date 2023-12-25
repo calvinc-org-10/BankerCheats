@@ -18,11 +18,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.NavigateBefore
+import androidx.compose.material.icons.filled.NavigateNext
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -318,7 +321,7 @@ object DONDScreens {
     // @OptIn(ExperimentalTransitionApi::class)
     @Composable
     fun MoneyListScreen(
-        DONDBoxesContents: Map<Int, Int>,   //TODO: Remove from final build - debugging only
+        // DONDBoxesContents: Map<Int, Int>,   //DONE: Remove from final build - debugging only
         hostWords:hostDialogue, beSilent: Boolean = false,
         AmountOpened:Int = 0,
         showOnly:Boolean = false,
@@ -331,7 +334,7 @@ object DONDScreens {
 
         if (pass <= passRange.last) {
             MoneyListScreen_actual(
-                DONDBoxesContents,    //TODO: Remove from final build - debugging only
+                // DONDBoxesContents,    //DONE: Remove from final build - debugging only
                 hostWords = hostWords, beSilent = beSilent || (pass != passRange.first),
                 amountAvail = amountAvail,
                 AmountOpened = AmountOpened,
@@ -346,7 +349,7 @@ object DONDScreens {
         }
     }
     @Composable  fun MoneyListScreen_actual(
-        DONDBoxesContents: Map<Int, Int>,   //TODO: Remove from final build - debugging only
+        // DONDBoxesContents: Map<Int, Int>,   //DONE: Remove from final build - debugging only
         hostWords:hostDialogue, beSilent: Boolean = false,
         AmountOpened:Int = 0,
         passBoxOpen: Int = 0,
@@ -362,9 +365,11 @@ object DONDScreens {
         val boxHgt = (scrHgt - (hostWordFontSize*2-2+12) + (12+20) - 200)/((nBoxes +1)/2)  // if you ask nicely, I'll lovingly explain this formula to you
         var alreadySpoken by remember { mutableStateOf(false) }
 
-        //TODO: Remove this block from final build - debugging
+        //DONE: Remove this block from final build - debugging
+        /*
         var CheatMap = IntArray(26)
         for ((box,amt) in DONDBoxesContents) CheatMap[amt] = box
+        */
 
         //TODO: See https://developer.android.com/jetpack/compose/layouts/custom to figure out how to implement this
         @Suppress("unused")
@@ -448,7 +453,7 @@ object DONDScreens {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = Amount[btnNum].toString() + " / " + CheatMap[btnNum],
+                            text = Amount[btnNum].toString(),    //  + " / " + CheatMap[btnNum],   //DONE: Remove from final build - debugging only
                             fontSize = fontSz.sp,
                             color = openAmountColor,
                         )
@@ -472,7 +477,7 @@ object DONDScreens {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = Amount[btnNum].toString() + " / " + CheatMap[btnNum],
+                            text = Amount[btnNum].toString(), // + " / " + CheatMap[btnNum],   //DONE: Remove from final build - debugging only
                             fontSize = fontSz.sp,
                             color = openAmountColor,
                         )
@@ -506,7 +511,7 @@ object DONDScreens {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = Amount[btnNum].toString() + " / " + CheatMap[btnNum],
+                            text = Amount[btnNum].toString(), // + " / " + CheatMap[btnNum],   //DONE: Remove from final build - debugging only
                             fontSize = fontSz.sp,
                             color = openAmountColor,
                         )
@@ -647,8 +652,31 @@ object DONDScreens {
                 )
             }
             Spacer(modifier = Modifier.height(10.dp))
-            Button(onClick = goback) {
-                Text("Go Back To Game!", fontSize = buttonFontSize.sp)
+            Row(
+                Modifier
+                    .wrapContentHeight()
+                    .fillMaxWidth()
+                    // .align(Alignment.BottomCenter)
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Column(modifier = Modifier.fillMaxWidth().weight(.1f), horizontalAlignment = Alignment.Start) {
+                    if (pagerState.currentPage>0) {
+                        Icon(Icons.Default.NavigateBefore, contentDescription = null)
+                    }
+                }
+                Column(modifier = Modifier.fillMaxWidth().weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Button(
+                        onClick = goback,
+                    ) {
+                        Text("Go Back To Game!", fontSize = buttonFontSize.sp)
+                    }
+                }
+                Column(modifier = Modifier.fillMaxWidth().weight(.1f), horizontalAlignment = Alignment.End) {
+                    if (pagerState.currentPage<pagerState.pageCount-1) {
+                        Icon(Icons.Default.NavigateNext, contentDescription = null)
+                    }
+                }
             }
         }
     }
@@ -709,16 +737,16 @@ fun MoneyListScreenPreview() {
     val dummyContentsMap = mutableMapOf<Int,Int>()
     val dummyAvailMap = mutableMapOf<Int,Boolean>()
     val hostWords = hostDialogue(screen = "Boxes contain Money!!")
-    var CheatMap = mutableMapOf<Int, Int>()     //TODO: remove this in final build
+    // var CheatMap = mutableMapOf<Int, Int>()     //DONE: remove this in final build
     for (i in 1..nBoxes) {
         dummyVisibleMap[i] = true
         dummyContentsMap[i] = i
         dummyAvailMap[i] = true
-        CheatMap[i] = i
+        // CheatMap[i] = i   //DONE: Remove from final build - debugging only
     }
     BankerCheatsTheme {
         DONDScreens.MoneyListScreen(
-            CheatMap,
+            // CheatMap,
             hostWords = hostWords,
             amountAvail = dummyAvailMap,
             onOKClick = { },
