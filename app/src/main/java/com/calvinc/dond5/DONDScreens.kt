@@ -624,12 +624,13 @@ object DONDScreens {
             ) { page ->
                 // Our page content
                 Text(modifier = Modifier.fillMaxWidth(),
-                    fontFamily = FontFamily.SansSerif,
-                    fontSize = 20.sp,
+                    fontFamily = if (page==0) FontFamily(Font(R.font.lemonregular)) else FontFamily.SansSerif,
+                    fontSize = if (page==0) 48.sp else 20.sp,
+                    lineHeight = if (page==0) 40.sp else 20.sp,
                     textAlign = TextAlign.Center,
                     text =
                     when (page) {
-                        0 -> "The Banker Will Cheat You Now"
+                        0 -> stringResource(id = R.string.DONDGameTitle)
                         1 -> "25 distinct Amounts from 1 to 1000000 are randomly placed in 25 Boxes, and the Boxes are sealed.\n" +
                                 "\n" +
                                 "At the beginning of the game, you will choose a Box.  This will be your Box through the entire game.  This Box will remain sealed until you either take an offer from the Banker or refuse all of the Banker's offers through the end.  If you play the game through to the end and refuse all of the Banker's offers, your Box will be opened and you will win the Amount in Your Box.\n"
@@ -637,7 +638,7 @@ object DONDScreens {
                                 "\n" +
                                 "Once you open 6 Boxes, the Banker will make you an offer.  The Banker's offer will depend on the Amounts in the Boxes you've opened. The offer increases if lower values are eliminated and decreases if upper values are eliminated.\n" +
                                 "\n" +
-                                "If you accept the Banker's offer, Your Box is opened and you can see if the offer (which is what you've won) is more or less than what's in Your Box (which is what you would have won if you ad refused offers until the end).\n" +
+                                "If you accept the Banker's offer, Your Box is opened and you can see if the offer (which is what you've won) is more or less than what's in Your Box (which is what you would have won if you had refused offers until the end).\n" +
                                 "\n" +
                                 "If you refuse the Banker's offer, this process continues, except you must open 5 (then 4, then 3, then 2, then 1) Boxes until the Banker's next offer.\n"
                         3 -> "When there is just one Box left in addition to Your Box, the Banker will make his final offer.  If you refuse the final offer, you will win whatever is in Your Box.\n"

@@ -590,7 +590,7 @@ class MainActivity : ComponentActivity() {
         var TotalMoney = 0.0
         var Divider = 0.0
         var Pct: Double
-        val generosityFactor = 1.15
+        val generosityFactor = 1.05
         for (n in 1..nBoxes) {
             if (amountAvail[n]!!) {
                 TotalMoney += Amount[n].toDouble()
@@ -612,9 +612,13 @@ class MainActivity : ComponentActivity() {
             Divider = 0.75
         }
         do {
-            Pct = offerMinPct + Math.random() * generosityFactor * (offerMaxPct - offerMinPct)
+            Pct = offerMinPct + Random.nextFloat() * generosityFactor * (offerMaxPct - offerMinPct)
         } while (offerMinPct > Pct || offerMaxPct < Pct)
         offerMoney = (TotalMoney * Pct / Divider).toLong()
+
+        // don't get TOO generous
+        while (offerMoney > Amount[nBoxes]) { offerMoney = (Random.nextDouble(0.889900, 0.999999)* Amount[nBoxes]).toLong() }
+
         return offerMoney
     }
 
