@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -198,7 +197,7 @@ object DONDScreens {
                 Spacer(modifier = Modifier.height(12.dp))
                 for (row in 1 until nBoxes step cpr) {
                     Row {
-                        for (col in 0..4) {
+                        for (col in 0..(cpr-1)) {
                             Button(
                                 onClick = { onBoxOpen(row + col) },
                                 modifier = Modifier.size(boxWid.dp),
@@ -371,9 +370,7 @@ object DONDScreens {
         for ((box,amt) in DONDBoxesContents) CheatMap[amt] = box
         */
 
-        //TODO: See https://developer.android.com/jetpack/compose/layouts/custom to figure out how to implement this
-        @Suppress("unused")
-        @Composable fun MLSBox(btnNum:Int): @Composable RowScope.() -> Unit {
+        @Composable fun MLSBox(btnNum:Int) {
             val avail = amountAvail[btnNum]!!
             val fontSz = AmountFontSize
             var openAmountColor = (if (avail) AmountAvailColor else AmountNotAvailColor)
@@ -383,20 +380,18 @@ object DONDScreens {
                     2 -> { openAmountColor = AmountNotAvailColor }
                 }
             }
-            return {
-                Box(
-                    modifier = Modifier
-                        .height(boxHgt.dp)
-                        .width(boxWid.dp)
-                        .background(Color.Blue, RoundedCornerShape(90)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = Amount[btnNum].toString(),
-                        fontSize = fontSz.sp,
-                        color = openAmountColor,
-                    )
-                }
+            Box(
+                modifier = Modifier
+                    .height(boxHgt.dp)
+                    .width(boxWid.dp)
+                    .background(Color.Blue, RoundedCornerShape(90)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = Amount[btnNum].toString(),
+                    fontSize = fontSz.sp,
+                    color = openAmountColor,
+                )
             }
         }
 
@@ -433,55 +428,8 @@ object DONDScreens {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    // MLSBox(btnNum = p1)
-                    // MLSBox(btnNum = p2)
-                    var btnNum = p1
-                    var avail = amountAvail[p1]!!
-                    var fontSz = AmountFontSize
-                    var openAmountColor = (if (avail) AmountAvailColor else AmountNotAvailColor)
-                    if (btnNum == AmountOpened) {
-                        when (passBoxOpen) {
-                            1 -> { openAmountColor = AmountAvailColor }
-                            2 -> { openAmountColor = AmountNotAvailColor }
-                        }
-                    }
-                    Box(
-                        modifier = Modifier
-                            .height(boxHgt.dp)
-                            .width(boxWid.dp)
-                            .background(Color.Blue, RoundedCornerShape(90)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = Amount[btnNum].toString(),    //  + " / " + CheatMap[btnNum],   //DONE: Remove from final build - debugging only
-                            fontSize = fontSz.sp,
-                            color = openAmountColor,
-                        )
-                    }
-                    // second box on this row
-                    btnNum = p2
-                    avail = amountAvail[p2]!!
-                    fontSz = AmountFontSize
-                    openAmountColor = (if (avail) AmountAvailColor else AmountNotAvailColor)
-                    if (btnNum == AmountOpened) {
-                        when (passBoxOpen) {
-                            1 -> { openAmountColor = AmountAvailColor }
-                            2 -> { openAmountColor = AmountNotAvailColor }
-                        }
-                    }
-                    Box(
-                        modifier = Modifier
-                            .height(boxHgt.dp)
-                            .width(boxWid.dp)
-                            .background(Color.Blue, RoundedCornerShape(90)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = Amount[btnNum].toString(), // + " / " + CheatMap[btnNum],   //DONE: Remove from final build - debugging only
-                            fontSize = fontSz.sp,
-                            color = openAmountColor,
-                        )
-                    }
+                    MLSBox(btnNum = p1)
+                    MLSBox(btnNum = p2)
                 }
             }
             @Suppress("KotlinConstantConditions")
@@ -491,31 +439,7 @@ object DONDScreens {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                 ) {
-                    // MLSBox(btnNum = p)
-                    @Suppress("UnnecessaryVariable")
-                    val btnNum = p
-                    val avail = amountAvail[p]!!
-                    val fontSz = AmountFontSize
-                    var openAmountColor = (if (avail) AmountAvailColor else AmountNotAvailColor)
-                    if (btnNum == AmountOpened) {
-                        when (passBoxOpen) {
-                            1 -> { openAmountColor = AmountAvailColor }
-                            2 -> { openAmountColor = AmountNotAvailColor }
-                        }
-                    }
-                    Box(
-                        modifier = Modifier
-                            .height(boxHgt.dp)
-                            .width(boxWid_last.dp)
-                            .background(Color.Blue, RoundedCornerShape(90)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = Amount[btnNum].toString(), // + " / " + CheatMap[btnNum],   //DONE: Remove from final build - debugging only
-                            fontSize = fontSz.sp,
-                            color = openAmountColor,
-                        )
-                    }
+                     MLSBox(btnNum = p)
                 }
             }
             Spacer(modifier = Modifier.height((12.dp)))

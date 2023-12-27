@@ -11,8 +11,9 @@ android {
         applicationId = "com.calvinc.dond5"
         minSdk = 30
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 10000  //major*10000 + minor*100 + patch*1
+        versionName = "1.0.0"
+        // prereleaseVersion = 2
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
