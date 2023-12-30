@@ -12,6 +12,7 @@ object DONDGlobals {
 
     lateinit var DONDTTSInstance: TextToSpeech
     var TTSOK = false
+    var useTTS = true
 
     @JvmField
     var intMyBox = 0
@@ -42,7 +43,7 @@ object DONDGlobals {
     const val bigMoneyMinimum = 100000 //100000
 
     fun DONDUtter(speakWords: String ="", queueMode: Int = TextToSpeech.QUEUE_ADD) {
-        if (TTSOK) {
+        if (TTSOK && useTTS) {
             DONDTTSInstance.speak(speakWords, queueMode, null, "ID0")
         }
     }

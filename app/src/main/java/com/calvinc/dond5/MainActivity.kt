@@ -44,7 +44,7 @@ import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
     // val SPLASH_DELAY: Long = 5000
-    private val DONDFeedbackEmail = "calvinc404@gmail.com"
+    private val DONDFeedbackEmail = "calvinc.developer.801@gmail.com"
     private val DONDFeedbackSubject = "Feedback - BankerCheats"
     private val DONDFeedbackMailBody = "\"The Banker Will Cheat You Now\" is Awesome!!"
 

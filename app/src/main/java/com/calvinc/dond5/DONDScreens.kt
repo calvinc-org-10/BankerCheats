@@ -25,16 +25,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.NavigateBefore
 import androidx.compose.material.icons.filled.NavigateNext
+import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material.icons.filled.VoiceOverOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,6 +58,7 @@ import com.calvinc.dond5.DONDGlobals.CalvinCheat
 import com.calvinc.dond5.DONDGlobals.DONDUtter
 import com.calvinc.dond5.DONDGlobals.intMyBox
 import com.calvinc.dond5.DONDGlobals.nBoxes
+import com.calvinc.dond5.DONDGlobals.useTTS
 import com.calvinc.dond5.ui.theme.BankerCheatsTheme
 import kotlinx.coroutines.delay
 
@@ -146,16 +151,15 @@ object DONDScreens {
                             onClick = { CalvinCheat = true }
                         ) { Text(stringResource(id = R.string.DONDGameAuthor)) }
                     }
-                    /*
                     Column (horizontalAlignment = AbsoluteAlignment.Right) {
-                        Button(onClick = emergencyExit) {Text("EE") }
+                        TextButton(onClick = emergencyExit) {Text("Skip Intro") }
                     }
-                    */
                 }
             // }
         }
     }
 
+    // these two fns are split out to support "instantly" changing the Voice/NoVoice button upon press
     @Composable
     fun MainScreen(
         @Suppress("LocalVariableName") DONDBoxesVisiblity:Map<Int,Boolean>,
@@ -163,6 +167,26 @@ object DONDScreens {
         onBoxOpen: (n:Int) -> Unit,
         miscfunctions: (f:String) -> Unit,
         @Suppress("LocalVariableName") DONDBoxesContents:Map<Int,Int> = mapOf()
+    ) {
+        var useTTSState by remember { mutableStateOf(useTTS) }
+
+        MS2(
+            DONDBoxesVisiblity, hostWords, congrats, beSilent, onBoxOpen, miscfunctions, DONDBoxesContents, useTTSState,
+            {
+                useTTSState = !useTTSState
+                useTTS = !useTTS
+            }
+        )
+    }
+    @Composable
+    fun MS2(
+        @Suppress("LocalVariableName") DONDBoxesVisiblity:Map<Int,Boolean>,
+        hostWords:hostDialogue, congrats:String = "", beSilent: Boolean = false,
+        onBoxOpen: (n:Int) -> Unit,
+        miscfunctions: (f:String) -> Unit,
+        @Suppress("LocalVariableName") DONDBoxesContents:Map<Int,Int> = mapOf(),
+        useTTSState: Boolean,
+        changeTTSState: () -> Unit
     ) {
         val endGameReveal = (congrats != "")
         val cpr = 5 // columns per row
@@ -213,7 +237,8 @@ object DONDScreens {
                                 Column {
                                     Text(
                                         (row + col).toString(),
-                                        fontSize = (boxWid / 4).sp
+                                        fontSize = (boxWid / 4).sp,
+                                        textAlign = TextAlign.Center,
                                     )
                                     if (endGameReveal && DONDBoxesVisiblity[row + col]!!) {
                                         Text(
@@ -221,7 +246,8 @@ object DONDScreens {
                                                 "%1$,d",
                                                 Amount[DONDBoxesContents[row + col]!!]
                                             ),
-                                            fontSize = (boxWid / 6).sp
+                                            fontSize = (boxWid / 6).sp,
+                                            textAlign = TextAlign.Center,
                                         )
                                     }
                                 }
@@ -303,15 +329,22 @@ object DONDScreens {
             Row() {
                 Button(
                     onClick = { miscfunctions("feedback") },
-                    // modifier = Modifier.align((Alignment.CenterHorizontally)),
                 ) {
                     Text("feedback")
                 }
                 Button(
                     onClick = { miscfunctions("rules") },
-                    // modifier = Modifier.align((Alignment.CenterHorizontally)),
                 ) {
                     Text("How to Play")
+                }
+                Spacer(modifier = Modifier.width(20.dp))
+                Button(
+                    onClick = changeTTSState
+                ) {
+                    if (useTTSState)
+                        Icon(Icons.Default.VoiceOverOff, contentDescription = null)
+                    else
+                        Icon(Icons.Default.RecordVoiceOver, contentDescription =null)
                 }
             }
         }
@@ -584,19 +617,25 @@ object DONDScreens {
                     .padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
-                Column(modifier = Modifier.fillMaxWidth().weight(.1f), horizontalAlignment = Alignment.Start) {
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(.1f), horizontalAlignment = Alignment.Start) {
                     if (pagerState.currentPage>0) {
                         Icon(Icons.Default.NavigateBefore, contentDescription = null)
                     }
                 }
-                Column(modifier = Modifier.fillMaxWidth().weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     Button(
                         onClick = goback,
                     ) {
                         Text("Go Back To Game!", fontSize = buttonFontSize.sp)
                     }
                 }
-                Column(modifier = Modifier.fillMaxWidth().weight(.1f), horizontalAlignment = Alignment.End) {
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(.1f), horizontalAlignment = Alignment.End) {
                     if (pagerState.currentPage<pagerState.pageCount-1) {
                         Icon(Icons.Default.NavigateNext, contentDescription = null)
                     }
