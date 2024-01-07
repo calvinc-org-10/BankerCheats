@@ -29,7 +29,9 @@ import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.VoiceOverOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -47,6 +49,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -55,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.calvinc.dond5.DONDGlobals.Amount
 import com.calvinc.dond5.DONDGlobals.CalvinCheat
+import com.calvinc.dond5.DONDGlobals.DONDTTSInstance
 import com.calvinc.dond5.DONDGlobals.DONDUtter
 import com.calvinc.dond5.DONDGlobals.intMyBox
 import com.calvinc.dond5.DONDGlobals.nBoxes
@@ -64,9 +68,6 @@ import kotlinx.coroutines.delay
 
 object DONDScreens {
     private const val hostWordFontSize = 20
-    private const val AmountFontSize = 20
-    private val AmountAvailColor = Color.Green
-    private val AmountNotAvailColor = Color.Gray
     private const val buttonFontSize = 18
 
     /************************************
@@ -170,23 +171,25 @@ object DONDScreens {
     ) {
         var useTTSState by remember { mutableStateOf(useTTS) }
 
-        MS2(
+        MainScreen_actual(
             DONDBoxesVisiblity, hostWords, congrats, beSilent, onBoxOpen, miscfunctions, DONDBoxesContents, useTTSState,
-            {
-                useTTSState = !useTTSState
-                useTTS = !useTTS
+            ) {newTTSState ->
+                useTTSState = newTTSState
+                useTTS = newTTSState
+
+                if (!newTTSState) DONDTTSInstance.stop()
             }
-        )
     }
+    @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
     @Composable
-    fun MS2(
+    fun MainScreen_actual(
         @Suppress("LocalVariableName") DONDBoxesVisiblity:Map<Int,Boolean>,
         hostWords:hostDialogue, congrats:String = "", beSilent: Boolean = false,
         onBoxOpen: (n:Int) -> Unit,
         miscfunctions: (f:String) -> Unit,
         @Suppress("LocalVariableName") DONDBoxesContents:Map<Int,Int> = mapOf(),
         useTTSState: Boolean,
-        changeTTSState: () -> Unit
+        changeTTSState: (Boolean) -> Unit
     ) {
         val endGameReveal = (congrats != "")
         val cpr = 5 // columns per row
@@ -337,15 +340,17 @@ object DONDScreens {
                 ) {
                     Text("How to Play")
                 }
-                Spacer(modifier = Modifier.width(20.dp))
-                Button(
-                    onClick = changeTTSState
-                ) {
-                    if (useTTSState)
-                        Icon(Icons.Default.VoiceOverOff, contentDescription = null)
-                    else
-                        Icon(Icons.Default.RecordVoiceOver, contentDescription =null)
-                }
+                Spacer(modifier = Modifier.width(30.dp))
+                Switch(
+                    checked = useTTSState,
+                    onCheckedChange = changeTTSState,
+                    thumbContent = {
+                        if (useTTSState)
+                            Icon(Icons.Default.RecordVoiceOver, contentDescription = null)
+                        else
+                            Icon(Icons.Default.VoiceOverOff, contentDescription = null)
+                    }
+                )
             }
         }
     }
@@ -403,15 +408,30 @@ object DONDScreens {
         for ((box,amt) in DONDBoxesContents) CheatMap[amt] = box
         */
 
+        fun AmountFontSize(avail: Boolean): Int {
+            val AmountAvailFontSize = 24
+            val AmountNotAvailFontSize = 20
+
+            return if (avail) AmountAvailFontSize else AmountNotAvailFontSize
+        }
+        fun AmountColor(avail: Boolean): Color {
+            val AmountAvailColor = Color(0xFFffdc3a) // Color.Yellow
+            val AmountNotAvailColor = Color.Gray
+
+            return if (avail) AmountAvailColor else AmountNotAvailColor
+        }
+
         @Composable fun MLSBox(btnNum:Int) {
             val avail = amountAvail[btnNum]!!
-            val fontSz = AmountFontSize
-            var openAmountColor = (if (avail) AmountAvailColor else AmountNotAvailColor)
+            val fontSz = AmountFontSize(avail)
+            var openAmountColor = AmountColor(avail)
             if (btnNum == AmountOpened) {
-                when (passBoxOpen) {
-                    1 -> { openAmountColor = AmountAvailColor }
-                    2 -> { openAmountColor = AmountNotAvailColor }
-                }
+                openAmountColor = AmountColor(
+                    when (passBoxOpen) {
+                    1 -> true
+                    2 -> false
+                    else -> false
+                } )
             }
             Box(
                 modifier = Modifier
@@ -423,6 +443,7 @@ object DONDScreens {
                 Text(
                     text = Amount[btnNum].toString(),
                     fontSize = fontSz.sp,
+                    fontWeight = if (avail) FontWeight.Bold else FontWeight.Normal,
                     color = openAmountColor,
                 )
             }
@@ -575,11 +596,13 @@ object DONDScreens {
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     fun HowToPlay(
+        verCode: Long,
+        verName: String,
         goback: () -> Unit
     ) {
-        val pagerState = rememberPagerState(pageCount = { 4 })
+        val pagerState = rememberPagerState(pageCount = { 5 })
         BackHandler { goback() }
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column( modifier = Modifier.fillMaxSize() ) {
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.weight(0.7f)
@@ -604,11 +627,28 @@ object DONDScreens {
                                 "\n" +
                                 "If you refuse the Banker's offer, this process continues, except you must open 5 (then 4, then 3, then 2, then 1) Boxes until the Banker's next offer.\n"
                         3 -> "When there is just one Box left in addition to Your Box, the Banker will make his final offer.  If you refuse the final offer, you will win whatever is in Your Box.\n"
+                        4 -> "This is version $verName, code $verCode of The Banker Will Cheat You Now." +
+                                "\n\n" +
+                                "I really need to thank everyone who tested this game and sent me feedback.  Even the unkind feedback was a big help!  I especially want to thank JMM and Tony D." +
+                                "\n\n" +
+                                "Enjoy!"
                         else -> ""
                     }
                 )
             }
             Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                Modifier
+                    .wrapContentHeight()
+                    .fillMaxWidth(),
+                    // .align(Alignment.BottomCenter)
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Version $verName, code $verCode",
+                    fontSize = 12.sp,
+                )
+            }
             Row(
                 Modifier
                     .wrapContentHeight()
@@ -645,25 +685,6 @@ object DONDScreens {
     }
 }
 
-
-/*
-@Composable
-private fun AnimatingButton(btnNum: Int, transitionData: TransitionData) {
-    // UI tree
-    Box(
-        modifier = Modifier
-            .fillMaxWidth(.5f)
-            .background(Color.Blue, RoundedCornerShape(90)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = Amount[btnNum].toString(),
-            fontSize = transitionData.fontsize.sp,
-            color = transitionData.color,
-        )
-    }
-}
-*/
 
 
 /******************************

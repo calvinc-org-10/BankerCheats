@@ -1,0 +1,17 @@
+[10003, 101.00.03, 2024-01-06]
+- Tweaked colors and turning Amount "off" on Amounts screen
+- shut voice up immediately on switch flip
+
+[10002, 10.00.02, 2024-01-02]
+- Textboxes have color set (to conform to Theme) (that's what Surface is for!!)
+- Replace Voice On/Off Button with a Switch and made Icons represent current (not desired) Voice state
+- Version number included in HowToPlay and in Feedback
+
+[10001, 01.00.01, 2023-12-30]
+- Added button to skip Intro
+- Corrected developer email address
+- Outright specified textAlign=TextAlign.Center for Box numbers and end-of-game Amount reveals
+- Button on Main Screen to turn on/off speech
+
+[10000, 01.00.00, 2023-12-28]
+Initial release for Google Play internal testing

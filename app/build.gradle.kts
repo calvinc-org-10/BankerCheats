@@ -3,6 +3,11 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+val DONDversMajor = 1
+val DONDversMinor = 0
+val DONDversPatch = 3
+val DONDversBump  = ""
+
 android {
     namespace = "com.calvinc.dond5"
     compileSdk = 34
@@ -11,8 +16,8 @@ android {
         applicationId = "com.calvinc.dond5"
         minSdk = 30
         targetSdk = 34
-        versionCode = 10001  //major*10000 + minor*100 + patch*1
-        versionName = "01.00.01"
+        versionCode = DONDversMajor*10000 + DONDversMinor * 100 + DONDversPatch
+        versionName = "${DONDversMajor.toString().padStart(2,'0')}.${DONDversMinor.toString().padStart(2,'0')}.${DONDversPatch.toString().padStart(2,'0')}" + if (DONDversBump!="") "-$DONDversBump" else ""
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

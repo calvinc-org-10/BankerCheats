@@ -10,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -43,15 +44,25 @@ import java.util.Locale
 import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
-    // val SPLASH_DELAY: Long = 5000
     private val DONDFeedbackEmail = "calvinc.developer.801@gmail.com"
     private val DONDFeedbackSubject = "Feedback - BankerCheats"
     private val DONDFeedbackMailBody = "\"The Banker Will Cheat You Now\" is Awesome!!"
+
+    private var DONDappver = object {
+        var verCode: Long = 0L
+        var verName: String = ""
+    }
 
     private var hostWords: hostDialogue = hostDialogue()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // TODO: wrap in try/catch
+        with (DONDappver) {
+            verCode = packageManager.getPackageInfo(getPackageName(), 0).longVersionCode
+            verName = packageManager.getPackageInfo(getPackageName(), 0).versionName
+        }
 
         startTTS()
         // fnfinish = this::finish
@@ -59,29 +70,34 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             BankerCheatsTheme {
-                var finished by remember { mutableStateOf(false) }
-                SplashScreen(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background),
-                    finished = finished,
-                    beforeFinished = {
-                        val DONDAudioTheme =
-                            MediaPlayer.create(LocalView.current.context, R.raw.bankercheatintrov1)
-                        DONDAudioTheme.setOnCompletionListener {
-                            finished = true
-                            it.release()
+                Surface {
+                    var finished by remember { mutableStateOf(false) }
+                    SplashScreen(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background),
+                        finished = finished,
+                        beforeFinished = {
+                            val DONDAudioTheme =
+                                MediaPlayer.create(
+                                    LocalView.current.context,
+                                    R.raw.bankercheatintrov1
+                                )
+                            DONDAudioTheme.setOnCompletionListener {
+                                finished = true
+                                it.release()
+                            }
+                            DONDScreens.DONDSplashScreen {
+                                finished = true
+                                DONDAudioTheme.release()
+                            }
+                            DONDAudioTheme.start()
+                        },
+                        whenFinished = {
+                            PlayDOND()
                         }
-                        DONDScreens.DONDSplashScreen {
-                            finished = true
-                            DONDAudioTheme.release()
-                        }
-                        DONDAudioTheme.start()
-                    },
-                    whenFinished = {
-                        PlayDOND()
-                    }
-                )
+                    )
+                }
             }
         }
     }
@@ -523,7 +539,9 @@ class MainActivity : ComponentActivity() {
             }
 
             enumDONDGameState.DONDShowRules -> {
-                DONDScreens.HowToPlay() {
+                DONDScreens.HowToPlay(
+                    DONDappver.verCode, DONDappver.verName,
+                ) {
                     DONDGameState = afterHowToPlayState
                 }
             }
@@ -537,7 +555,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun sendDONDFeedback() {
-        composeEmail(DONDFeedbackEmail, DONDFeedbackSubject, DONDFeedbackMailBody)
+        composeEmail(
+            DONDFeedbackEmail,
+            DONDFeedbackSubject + " ver ${DONDappver.verName}, code ${DONDappver.verCode}",
+            DONDFeedbackMailBody + "\nver ${DONDappver.verName}, code ${DONDappver.verCode}\n"
+        )
     }
     @Suppress("SameParameterValue")
     private fun composeEmail(recipient: String, subject: String, body: String) {
