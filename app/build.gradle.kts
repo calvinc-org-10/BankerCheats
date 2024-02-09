@@ -1,11 +1,13 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    // id("org.jetbrains.kotlin.plugin.parcelize") // version "2.0.0-Beta3"
+    // id("kotlin-parcelize")
 }
 
 val DONDversMajor = 1
 val DONDversMinor = 0
-val DONDversPatch = 3
+val DONDversPatch = 4
 val DONDversBump  = ""
 
 android {
@@ -14,8 +16,8 @@ android {
 
     defaultConfig {
         applicationId = "com.calvinc.dond5"
-        minSdk = 30
-        targetSdk = 34
+        minSdk = 26
+        targetSdk = 33  //Google Play requires that apps target API level 33 or higher.
         versionCode = DONDversMajor*10000 + DONDversMinor * 100 + DONDversPatch
         versionName = "${DONDversMajor.toString().padStart(2,'0')}.${DONDversMinor.toString().padStart(2,'0')}.${DONDversPatch.toString().padStart(2,'0')}" + if (DONDversBump!="") "-$DONDversBump" else ""
 
@@ -59,7 +61,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.activity:activity-compose:1.8.1")
-    implementation(platform("androidx.compose:compose-bom:2023.03.00"))
+    implementation(platform("androidx.compose:compose-bom:2024.01.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")

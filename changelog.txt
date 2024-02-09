@@ -1,8 +1,22 @@
-[10003, 101.00.03, 2024-01-06]
+TODO:
+- calculate scrnHeight, scrnWidth and base most elements off that and/or use Modifier.weight
+
+[10004, 01.00.04, 2024-xx-xx]
+In English, this version
+- fixed bug where rotating device or switching apps restarted game from beginning
+- improves the way the speech works internally
+- provides support for some older phones
+Technically, what I did was
+- tweaked some remember's to rememberSavable.  Some values must survive device state change
+- replaced TTSOK variable with function that queries TTS Engine directly at runtime
+- reduce minSDK to 26, targetSDK = 30
+- retrofitted or forked code that depended on newer SDK
+
+[10003, 01.00.03, 2024-01-06]
 - Tweaked colors and turning Amount "off" on Amounts screen
 - shut voice up immediately on switch flip
 
-[10002, 10.00.02, 2024-01-02]
+[10002, 01.00.02, 2024-01-02]
 - Textboxes have color set (to conform to Theme) (that's what Surface is for!!)
 - Replace Voice On/Off Button with a Switch and made Icons represent current (not desired) Voice state
 - Version number included in HowToPlay and in Feedback

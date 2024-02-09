@@ -2,14 +2,12 @@
 <resources>
     <string name="hostWord_ThisIsLastOffer">This will be your last offer.  If you don\'t take this offer, you will win whatever\'s in your box %1$,d.</string>
     <string name="hostWord_ChooseABox1">Choose a Box. This will be your Box.</string>
-    <string name="hostWord_ChooseABox2">Choose a Box to open.</string>
     <string name="hostWord_TimeForOffer">It\'s time for an offer!</string>
     <string name="hostWord_TimeToOpen1Box">It\'s time to open a Box!</string>
     <string name="hostWord_TimeToOpenBoxes">It\'s time to open %1$d Boxes!</string>
-    <string name="hostWord_OpenAnotherBox">Open another Box!</string>
     <string name="hostWord_OpenAnotherBoxofN">You have %1$d more boxes to open.\nOpen another Box!</string>
     <string name="hostWord_OpenOneMoreBox">Open one more Box, then the Banker will make you an offer!</string>
-    <string name="hostWord_OfferTaken">"Offer of %1$,d was taken."</string>
+    <string name="hostWord_OfferTaken">"You took the Offer of %1$,d."</string>
     <string name="hostWord_OfferRefused">"Offer of %1$,d was refused."</string>
     <string name="hostWord_BoxContains">Box %1d contains %2$,d.</string>
     <string name="hostWord_Congrats1">Congratulations on winning %1$,d!</string>

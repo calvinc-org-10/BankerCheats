@@ -10,30 +10,20 @@ object DONDGlobals {
     const val absOfferMaxPct = 0.83
     const val offerMaxPctDelta = 0.0625
 
+    // TTS vars - the TTS instance, a fn to indicate DONDTTSInstance is kosher, and a var to indicate whether or not it should be used
     lateinit var DONDTTSInstance: TextToSpeech
-    var TTSOK = false
+    fun TTSOK(): Boolean = (DONDTTSInstance.voice != null)
+    // var TTSOK = false
     var useTTS = true
 
-    @JvmField
-    var intMyBox = 0
-    @JvmField
-    var roundNum = 0
-    @JvmField
-    var toOpen = 0
-    var lastBoxOpened = 0
-    var boxesOpened = 0
-    @JvmField
-    var offerMinPct = 0.0
-    @JvmField
-    var offerMaxPct = 0.0
-    @JvmField
-    var offerMoney: Long = 0
     @JvmField
     var CalvinCheat = false
     var tmpCheatBox: Int = 0
 
     const val ouchwordProbability = 0.45f
+    @Suppress("TrailingComma")
     val ouchWords = listOf("ouch!! ", "oooh! ","oh wow!! ", "Oh!! ", "ooh, that hurts!! ",)
+    @Suppress("unused")
     val moneyinplayWords = listOf("still in play")
 
     @JvmField
@@ -43,7 +33,7 @@ object DONDGlobals {
     const val bigMoneyMinimum = 100000 //100000
 
     fun DONDUtter(speakWords: String ="", queueMode: Int = TextToSpeech.QUEUE_ADD) {
-        if (TTSOK && useTTS) {
+        if (TTSOK() && useTTS) {
             DONDTTSInstance.speak(speakWords, queueMode, null, "ID0")
         }
     }
